@@ -1,8 +1,13 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AppShell } from "@/components/layout/app-shell";
+import {
+  DotsThreeVerticalIcon,
+  LockSimpleIcon,
+  PhoneIcon,
+  UsersIcon,
+} from "@phosphor-icons/react";
 import { AppHeader } from "@/components/layout/app-header";
 import { MessageList } from "@/components/chat/message-list";
 import { MessageComposer } from "@/components/chat/message-composer";
@@ -11,11 +16,14 @@ import { ChatSettingsSheet } from "@/components/chat/chat-settings-sheet";
 import { GroupInfoSheet } from "@/components/chat/group-info-sheet";
 import { ImageLightbox } from "@/components/chat/image-lightbox";
 import { ConversationTheme } from "@/components/theme/conversation-theme";
+import { IconButton } from "@/components/ui/icon-button";
 import { useChat } from "@/hooks/useChat";
 import { useAuthStore } from "@/stores/auth-store";
 import { useChatStore } from "@/stores/chat-store";
 import { pinMessage } from "@/lib/e2e-api";
 import { toast } from "@/stores/toast-store";
+import { useCall } from "@/contexts/call-context";
+import { useCallStore } from "@/stores/call-store";
 import { cn } from "@/lib/utils";
 
 export default function ChatPage({
@@ -29,6 +37,15 @@ export default function ChatPage({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [groupInfoOpen, setGroupInfoOpen] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1280px)");
+    setIsDesktop(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
   const {
     conversation,
@@ -50,6 +67,10 @@ export default function ChatPage({
     isMessageRead,
   } = useChat(id);
 
+  const { startCall } = useCall();
+  const callStatus = useCallStore((s) => s.status);
+  const inCall = callStatus !== "idle" && callStatus !== "ended";
+
   const isGroup = conversation?.type === "group";
   const statusLabel = isGroup
     ? `${conversation?.memberCount ?? conversation?.members.length ?? 0} thành viên`
@@ -57,98 +78,114 @@ export default function ChatPage({
       ? "Đang hoạt động"
       : "Offline";
 
+  const headerSubtitle = [
+    !isGroup && otherUserOnline ? "Đang hoạt động" : !isGroup ? "Offline" : statusLabel,
+    conversation?.encryptionMode === "e2e" ? "Mã hóa E2E" : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   if (isLoading || !user) {
     return (
-      <AppShell hideBottomNav header={<AppHeader title="..." backHref="/chats" />}>
-        <div className="flex flex-1 flex-col gap-2 p-4">
+      <div className="chat-column flex flex-col page-slide-in">
+        <AppHeader title="..." backHref={isDesktop ? undefined : "/chats"} />
+        <div className="chat-scroll-region chat-thread-bg flex flex-col gap-2.5 p-4">
           {[1, 2, 3, 4, 5].map((i) => (
             <div
               key={i}
               className={cn(
-                "h-12 animate-pulse rounded-2xl bg-surface",
+                "h-11 skeleton-shimmer rounded-2xl",
                 i % 2 === 0 ? "ml-auto w-2/3" : "w-2/3",
               )}
             />
           ))}
         </div>
-      </AppShell>
+      </div>
     );
   }
 
   return (
     <>
-      <AppShell
-        hideBottomNav
-        className="page-slide-in"
-        header={
-          <AppHeader
-            title={conversation?.displayName ?? "Chat"}
-            backHref="/chats"
-            onTitleClick={isGroup ? () => setGroupInfoOpen(true) : undefined}
-            right={
-              <div className="flex items-center">
-                {isGroup && (
-                  <button
-                    type="button"
-                    onClick={() => setGroupInfoOpen(true)}
-                    className="flex min-h-[var(--touch-target)] min-w-[var(--touch-target)] items-center justify-center text-lg"
-                    aria-label="Thông tin nhóm"
-                  >
-                    👥
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setSettingsOpen(true)}
-                  className="flex min-h-[var(--touch-target)] min-w-[var(--touch-target)] items-center justify-center text-lg"
-                  aria-label="Cài đặt cuộc trò chuyện"
-                >
-                  ⋮
-                </button>
-              </div>
-            }
-          />
-        }
-      >
+      <div className="chat-column flex flex-col page-slide-in">
+        <AppHeader
+          title={conversation?.displayName ?? "Chat"}
+          subtitle={headerSubtitle}
+          backHref={isDesktop ? undefined : "/chats"}
+          onTitleClick={isGroup ? () => setGroupInfoOpen(true) : undefined}
+          right={
+            <div className="flex items-center">
+              {isGroup && (
+                <IconButton
+                  icon={UsersIcon}
+                  label="Thông tin nhóm"
+                  onClick={() => setGroupInfoOpen(true)}
+                />
+              )}
+              {!isGroup && (
+                <IconButton
+                  icon={PhoneIcon}
+                  iconWeight="fill"
+                  label="Gọi thoại"
+                  disabled={inCall}
+                  onClick={() =>
+                    startCall(id, conversation?.displayName ?? "Chat")
+                  }
+                />
+              )}
+              <IconButton
+                icon={DotsThreeVerticalIcon}
+                iconWeight="bold"
+                label="Cài đặt cuộc trò chuyện"
+                onClick={() => setSettingsOpen(true)}
+              />
+            </div>
+          }
+        />
+
         <ConversationTheme
-          className="flex flex-1 flex-col overflow-hidden"
+          className="chat-column flex min-h-0 flex-1 flex-col chat-thread-bg"
           themeOverride={conversation?.settings?.themeOverride}
           wallpaperUrl={conversation?.settings?.wallpaperUrl}
         >
-          <div className="border-b border-border px-4 py-1.5">
-            <p className="text-xs text-text-secondary">
+          <div className="chat-column-header hidden px-5 py-1.5 lg:block">
+            <p className="flex items-center gap-1.5 text-xs text-text-secondary">
               {!isGroup && (
                 <span
                   className={cn(
-                    "mr-1.5 inline-block h-2 w-2 rounded-full",
-                    otherUserOnline ? "bg-green-500" : "bg-text-secondary",
+                    "inline-block h-2 w-2 rounded-full",
+                    otherUserOnline
+                      ? "bg-online shadow-[0_0_6px_color-mix(in_srgb,var(--online)_50%,transparent)]"
+                      : "bg-text-secondary/40",
                   )}
                 />
               )}
               {statusLabel}
-              {conversation?.encryptionMode === "e2e" && " · 🔒 E2E"}
+              {conversation?.encryptionMode === "e2e" && (
+                <span className="inline-flex items-center gap-0.5 text-primary">
+                  <LockSimpleIcon size={12} weight="fill" aria-hidden />
+                  E2E
+                </span>
+              )}
             </p>
           </div>
 
-          <div className="flex flex-1 flex-col overflow-hidden">
-            <MessageList
-              messages={messages}
-              currentUserId={user.id}
-              isMessageRead={isMessageRead}
-              showSenderNames={isGroup}
-              onLoadMore={loadMore}
-              hasMore={hasMore}
-              isLoadingMore={isLoadingMore}
-              onOpenImage={setLightboxUrl}
-              onReply={setReplyTo}
-              onReaction={toggleReaction}
-              onPin={(msg) => {
-                void pinMessage(id, msg.id).then(() =>
-                  toast("Đã ghim tin", "success"),
-                );
-              }}
-            />
-          </div>
+          <MessageList
+            messages={messages}
+            currentUserId={user.id}
+            isMessageRead={isMessageRead}
+            showSenderNames={isGroup}
+            onLoadMore={loadMore}
+            hasMore={hasMore}
+            isLoadingMore={isLoadingMore}
+            onOpenImage={setLightboxUrl}
+            onReply={setReplyTo}
+            onReaction={toggleReaction}
+            onPin={(msg) => {
+              void pinMessage(id, msg.id).then(() =>
+                toast("Đã ghim tin", "success"),
+              );
+            }}
+          />
 
           <TypingIndicator conversationId={id} />
           <MessageComposer
@@ -162,7 +199,7 @@ export default function ChatPage({
             uploadProgress={uploadProgress}
           />
         </ConversationTheme>
-      </AppShell>
+      </div>
 
       <ChatSettingsSheet
         open={settingsOpen}

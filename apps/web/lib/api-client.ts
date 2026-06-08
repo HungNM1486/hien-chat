@@ -72,7 +72,7 @@ export async function apiFetch<T>(
     headers.set("Content-Type", "application/json");
   }
 
-  let token = getAccessToken();
+  const token = getAccessToken();
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
   }
@@ -83,7 +83,10 @@ export async function apiFetch<T>(
     credentials: "include",
   });
 
-  if (res.status === 401 && !path.startsWith("/auth/")) {
+  if (
+    res.status === 401 &&
+    (!path.startsWith("/auth/") || path === "/auth/me")
+  ) {
     const newToken = await refreshAccessToken();
     if (newToken) {
       headers.set("Authorization", `Bearer ${newToken}`);

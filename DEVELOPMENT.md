@@ -6,12 +6,31 @@
 
 ---
 
+## Trạng thái sản phẩm (cập nhật 06/2026)
+
+| Phase | Mục tiêu | Trạng thái |
+|---|---|---|
+| **0** | Monorepo, auth, app shell | ✅ Hoàn thành |
+| **1** | Chat 1-1 realtime, read receipts | ✅ Hoàn thành |
+| **2** | Theme engine, settings, UX polish | ✅ Hoàn thành (UI refresh *Hiên đêm*) |
+| **3** | Nhóm, ảnh, voice, reply, reaction, invite | ✅ Hoàn thành |
+| **4** | E2E opt-in 1-1, backup khóa | 🟡 Đang có (crypto package + UI setup) |
+| **5** | PWA production, push, deploy | ⬜ Chưa (manifest + offline page có; SW đang tắt dev) |
+| **6** | Video call, tính năng gia đình | ⬜ Chưa |
+
+**Stack thực tế:** Next.js 16 · React 19 · Tailwind v4 · Fastify · Drizzle · Zustand · `@phosphor-icons/react` · `@hien-nha/theme` · `@hien-nha/crypto`.
+
+**Theme mặc định:** `midnight` (*Hiên đêm*) — `#12100E` nền, `#C8715A` accent terracotta (không còn palette GitHub clone).
+
+---
+
 ## Mục lục
 
 1. [Tổng quan & nguyên tắc](#1-tổng-quan--nguyên-tắc)
-2. [Tech stack cố định](#2-tech-stack-cố-định)
-3. [Cấu trúc monorepo](#3-cấu-trúc-monorepo)
-4. [Mobile-first UI — quy chuẩn bắt buộc](#4-mobile-first-ui--quy-chuẩn-bắt-buộc)
+2. [Trạng thái sản phẩm](#trạng-thái-sản-phẩm-cập-nhật-062026)
+3. [Tech stack cố định](#2-tech-stack-cố-định)
+4. [Cấu trúc monorepo](#3-cấu-trúc-monorepo)
+5. [Mobile-first UI — quy chuẩn bắt buộc](#4-mobile-first-ui--quy-chuẩn-bắt-buộc)
 5. [Phase 0 — Nền tảng (Tuần 1–2)](#phase-0--nền-tảng-tuần-12)
 6. [Phase 1 — MVP Chat (Tuần 3–5)](#phase-1--mvp-chat-tuần-35)
 7. [Phase 2 — Theme & UX (Tuần 6–7)](#phase-2--theme--ux-tuần-67)
@@ -67,9 +86,11 @@ Sau đó      Phase 6   Video call, tính năng gia đình...
 |---|---|---|
 | Framework | **Next.js 15** (App Router) | SSR nhẹ, routing, API routes proxy |
 | UI | **React 19** + **TypeScript** | Type-safe, ecosystem lớn |
-| Styling | **Tailwind CSS v4** | Utility-first, responsive nhanh |
-| Component | **shadcn/ui** (tùy biến) | Accessible, không lock-in |
-| State | **Zustand** (UI) + **TanStack Query** (server) | Nhẹ, phù hợp chat realtime |
+| Styling | **Tailwind CSS v4** | Utility-first, CSS variables theme |
+| Component | Custom (`components/ui/*`) | BottomSheet, IconButton, UserAvatar |
+| Icons | **@phosphor-icons/react** | Nhất quán, thay emoji |
+| Font | **Geist Sans + Geist Mono** (`next/font`) | Body + timestamp/badge |
+| State | **Zustand** | UI + chat store |
 | Realtime client | Native **WebSocket** hook | Kiểm soát reconnect/backoff |
 | Form | **React Hook Form** + **Zod** | Validation auth/settings |
 | i18n | **next-intl** | Việt + EN sau |
@@ -118,7 +139,7 @@ hien-nha/
 │   │   │   ├── chat/           # MessageList, Composer, Bubble...
 │   │   │   ├── layout/         # AppShell, BottomNav, SafeArea
 │   │   │   ├── theme/          # ThemeProvider, ThemePicker
-│   │   │   └── ui/             # shadcn primitives
+│   │   │   └── ui/             # BottomSheet, IconButton, toast...
 │   │   ├── hooks/              # useWebSocket, useChat, useTheme
 │   │   ├── stores/             # zustand stores
 │   │   ├── lib/                # api client, crypto wrapper
@@ -223,17 +244,50 @@ hien-nha/
 ### 4.5. CSS tokens (mobile)
 
 ```css
-/* apps/web/app/globals.css */
+/* apps/web/app/globals.css — rút gọn */
 :root {
+  --background: #12100e;
+  --surface: #1c1916;
+  --surface-elevated: color-mix(in srgb, var(--surface) 88%, var(--foreground));
+  --primary: #c8715a;
+  --bubble-sent: #a85d42;
+  --bubble-received: #2a2620;
+  --shadow-color: 18 14 10;
+
   --header-height: 56px;
-  --composer-min-height: 52px;
+  --composer-min-height: 44px;
   --bottom-nav-height: 64px;
   --touch-target: 44px;
-  --radius-bubble: 18px;
+  --radius-bubble: 20px;
   --font-size-base: 16px;
-  --font-size-large: 20px;   /* accessibility mode */
 }
 ```
+
+Theme presets ghi đè các biến trên qua `packages/theme` → `applyThemeToElement()`.
+
+### 4.6. Ngôn ngữ thị giác Hiên nhà
+
+> Áp dụng từ UI refresh 06/2026. Mọi màn mới **phải** dùng pattern dưới đây thay emoji / flat box cũ.
+
+| Thành phần | Quy tắc |
+|---|---|
+| **Palette** | Một accent terracotta (`--primary`); nền charcoal ấm; tránh clone GitHub/Microsoft |
+| **Surfaces** | `.glass-panel` — blur + inner highlight; sheet/modal dùng `BottomSheet` |
+| **Avatar** | Squircle (`rounded-[18px]`), gradient ring; component `UserAvatar` |
+| **Bubble** | `.bubble-sent` gradient + `.bubble-received` border mờ; group tin liên tiếp, tail góc |
+| **Icon** | Phosphor only; `IconButton` với variant ghost/soft/primary |
+| **Form** | `.input-field`, `.btn-primary` / `.btn-secondary` / `.btn-danger` |
+| **Motion** | `.pressable` scale 0.96; `prefers-reduced-motion` tôn trọng |
+| **Grain** | Overlay noise cố định trên `body::before` (pointer-events: none) |
+
+**Component tái sử dụng:**
+
+- `components/ui/bottom-sheet.tsx`
+- `components/ui/icon-button.tsx`
+- `components/ui/user-avatar.tsx`
+- `components/ui/toast-container.tsx`
+
+**Không dùng:** emoji làm icon UI, `✕` text làm nút đóng, card phẳng không shadow trên sheet.
 
 ---
 
@@ -625,16 +679,17 @@ deleted_at       timestamp nullable
 - [ ] `prefers-color-scheme` fallback nếu theme = `system`
 
 ```typescript
-// packages/theme/src/presets/midnight.ts
+// packages/theme/src/presets.ts — midnight (Hiên đêm)
 export const midnight: ThemeTokens = {
   id: 'midnight',
-  name: 'Đêm Khuya',
+  name: 'Hiên đêm',
   colors: {
-    background: '#0D1117',
-    surface: '#161B22',
-    primary: '#58A6FF',
-    bubbleSent: '#238636',
-    bubbleReceived: '#21262D',
+    background: '#12100E',
+    surface: '#1C1916',
+    primary: '#C8715A',
+    onPrimary: '#FFFAF7',
+    bubbleSent: '#A85D42',
+    bubbleReceived: '#2A2620',
     // ...
   },
 };

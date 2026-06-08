@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
-  <rect width="48" height="48" rx="12" fill="#FFF8F0"/>
-  <path d="M8 22c6-8 26-8 32 0" stroke="#5C4033" stroke-width="2" stroke-linecap="round"/>
-  <path d="M10 22c5-6 23-6 28 0v3H10v-3z" fill="#E8A598" stroke="#5C4033" stroke-width="1.5" stroke-linejoin="round"/>
-  <rect x="14" y="25" width="3.5" height="12" rx="1" fill="#E8A598" stroke="#5C4033" stroke-width="1.2"/>
-  <rect x="22.25" y="25" width="3.5" height="12" rx="1" fill="#E8A598" stroke="#5C4033" stroke-width="1.2"/>
-  <rect x="30.5" y="25" width="3.5" height="12" rx="1" fill="#E8A598" stroke="#5C4033" stroke-width="1.2"/>
-  <rect x="12" y="37" width="24" height="2.5" rx="1" fill="#E8A598" stroke="#5C4033" stroke-width="1"/>
-  <rect x="9" y="35" width="4" height="3" rx="0.8" fill="#5C4033"/>
-  <path d="M10 32c0-2 1.5-3.5 1.5-3.5s1.5 1.5 1.5 3.5c0 1.2-.7 2-1.5 2s-1.5-.8-1.5-2z" fill="#5C4033"/>
+  <rect width="48" height="48" rx="12" fill="#FF6B9D"/>
+  <ellipse cx="24" cy="28" rx="14" ry="12" fill="#FFFFFF"/>
+  <ellipse cx="12" cy="14" rx="5" ry="6" fill="#FFFFFF"/>
+  <ellipse cx="36" cy="14" rx="5" ry="6" fill="#FFFFFF"/>
+  <ellipse cx="18" cy="26" rx="2" ry="2.5" fill="#4A2540"/>
+  <ellipse cx="30" cy="26" rx="2" ry="2.5" fill="#4A2540"/>
+  <ellipse cx="24" cy="31" rx="2" ry="1.5" fill="#FFD54F"/>
+  <path d="M8 10c2-4 6-6 8-4s2 6 0 8c-3 2-7 0-8-4z" fill="#FF1744"/>
+  <circle cx="9" cy="9" r="2" fill="#FF5252"/>
 </svg>

@@ -1,36 +1,37 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# @hien-nha/web
 
-## Getting Started
+Next.js app — giao diện chính của Hiên nhà (mobile-first, PWA-ready).
 
-First, run the development server:
+## Chạy
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+# Từ root monorepo
 pnpm dev
-# or
-bun dev
+
+# Chỉ web (cần server :4000 đang chạy)
+pnpm --filter @hien-nha/web dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Mở [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Cấu trúc chính
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+app/
+  (auth)/          login, register
+  (app)/           shell bảo vệ: chats, settings
+components/
+  chat/            bubble, composer, sheets
+  layout/          AppShell, header, bottom nav
+  theme/           ThemeProvider, picker
+  ui/              BottomSheet, IconButton, UserAvatar, toast
+```
 
-## Learn More
+## Design system
 
-To learn more about Next.js, take a look at the following resources:
+- **Font:** Geist Sans + Geist Mono (timestamp, badge)
+- **Icon:** `@phosphor-icons/react`
+- **Theme mặc định:** `midnight` (*Hiên đêm*) — xem `packages/theme`
+- **CSS utilities:** `globals.css` — `.glass-panel`, `.input-field`, `.btn-*`, `.bubble-*`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Chi tiết quy chuẩn UI: [DEVELOPMENT.md §4](../../DEVELOPMENT.md#4-mobile-first-ui--quy-chuẩn-bắt-buộc).

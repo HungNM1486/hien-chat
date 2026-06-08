@@ -31,7 +31,9 @@ export default function PrivacySettingsPage() {
   };
 
   return (
-    <AppShell header={<AppHeader title="Quyền riêng tư" backHref="/settings" />}>
+    <AppShell
+      header={<AppHeader title="Quyền riêng tư" subtitle="Kiểm soát thông tin hiển thị" backHref="/settings" />}
+    >
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-4 py-6">
         <ToggleRow
           label="Ẩn trạng thái hoạt động"
@@ -42,7 +44,7 @@ export default function PrivacySettingsPage() {
         />
         <ToggleRow
           label="Tắt xác nhận đã đọc"
-          desc="Người khác không thấy ✓✓ khi bạn đọc tin"
+          desc="Người khác không thấy dấu đã đọc khi bạn xem tin"
           checked={hideReadReceipts}
           disabled={saving}
           onChange={(v) => updateSetting("hideReadReceipts", v)}
@@ -66,17 +68,17 @@ function ToggleRow({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <label className="flex min-h-[var(--touch-target)] items-center justify-between rounded-xl border border-border px-4 py-3">
+    <label className="settings-card flex min-h-[var(--touch-target)] cursor-pointer items-center justify-between px-4 py-3.5">
       <div className="pr-4">
         <p className="font-medium text-text-primary">{label}</p>
-        <p className="text-sm text-text-secondary">{desc}</p>
+        <p className="text-sm leading-relaxed text-text-secondary">{desc}</p>
       </div>
       <input
         type="checkbox"
         checked={checked}
         disabled={disabled}
         onChange={(e) => onChange(e.target.checked)}
-        className="h-6 w-6 shrink-0 accent-primary"
+        className="h-5 w-5 shrink-0 accent-primary"
       />
     </label>
   );

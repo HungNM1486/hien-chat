@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { MessagePublic } from "@hien-nha/shared";
+import { ChecksIcon, CheckIcon } from "@phosphor-icons/react";
 import { ImageBubble } from "@/components/chat/image-bubble";
 import { VoiceBubble } from "@/components/chat/voice-bubble";
 import { ReplyPreview } from "@/components/chat/reply-preview";
@@ -50,6 +51,8 @@ interface MessageBubbleProps {
   isOwn: boolean;
   isRead?: boolean;
   showSenderName?: boolean;
+  showTail?: boolean;
+  isGrouped?: boolean;
   currentUserId: string;
   onOpenImage: (url: string) => void;
   onReply: (message: MessagePublic) => void;
@@ -62,6 +65,8 @@ export function MessageBubble({
   isOwn,
   isRead,
   showSenderName,
+  showTail = true,
+  isGrouped = false,
   currentUserId,
   onOpenImage,
   onReply,
@@ -105,7 +110,7 @@ export function MessageBubble({
   const renderContent = () => {
     if (isDeleted) {
       return (
-        <p className="whitespace-pre-wrap break-words text-[length:var(--font-size-base)] italic leading-relaxed text-text-primary">
+        <p className="whitespace-pre-wrap break-words text-[length:var(--font-size-base)] italic leading-relaxed opacity-80">
           {message.content}
         </p>
       );
@@ -118,7 +123,7 @@ export function MessageBubble({
         return <VoiceBubble message={message} isOwn={isOwn} />;
       default:
         return (
-          <p className="whitespace-pre-wrap break-words text-[length:var(--font-size-base)] leading-relaxed text-text-primary">
+          <p className="whitespace-pre-wrap break-words text-[length:var(--font-size-base)] leading-[1.45]">
             {message.content}
           </p>
         );
@@ -127,11 +132,21 @@ export function MessageBubble({
 
   return (
     <>
-      <div className={cn("flex", isOwn ? "justify-end" : "justify-start")}>
+      <div
+        className={cn(
+          "flex",
+          isOwn ? "justify-end" : "justify-start",
+          isGrouped ? "mt-0.5" : "mt-2",
+        )}
+      >
         <div
           className={cn(
-            "max-w-[85%] rounded-[var(--radius-bubble)] px-4 py-2.5",
-            isOwn ? "rounded-br-md bg-bubble-sent" : "rounded-bl-md bg-bubble-received",
+            "relative max-w-[82%] px-3.5 py-2.5 md:max-w-[72%]",
+            isOwn ? "bubble-sent" : "bubble-received",
+            isOwn && showTail && "bubble-tail-sent",
+            !isOwn && showTail && "bubble-tail-received",
+            !showTail && (isOwn ? "rounded-br-[var(--radius-bubble)]" : "rounded-bl-[var(--radius-bubble)]"),
+            showTail && "rounded-[var(--radius-bubble)]",
             isDeleted && "opacity-70",
           )}
           onContextMenu={isDeleted ? undefined : handleContextMenu}
@@ -139,14 +154,14 @@ export function MessageBubble({
           onTouchEnd={handleTouchEnd}
           onTouchMove={handleTouchEnd}
         >
-          {showSenderName && message.sender && !isOwn && (
+          {showSenderName && message.sender && !isOwn && !isGrouped && (
             <p className="mb-1 text-xs font-semibold text-primary">
               {message.sender.displayName}
             </p>
           )}
 
           {message.replyTo && !isDeleted && (
-            <div className="mb-2 rounded-lg bg-black/5 px-2 py-1.5">
+            <div className="mb-2 rounded-xl bg-background/28 px-2.5 py-1.5">
               <ReplyPreview message={message.replyTo} compact />
             </div>
           )}
@@ -154,17 +169,17 @@ export function MessageBubble({
           {renderContent()}
 
           {reactionGroups.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1">
+            <div className="-mb-1 mt-2 flex flex-wrap gap-1">
               {reactionGroups.map((group) => (
                 <button
                   key={group.emoji}
                   type="button"
                   onClick={() => onReaction(message.id, group.emoji)}
                   className={cn(
-                    "rounded-full px-2 py-0.5 text-xs",
+                    "pressable rounded-full border border-border/40 px-2 py-0.5 text-xs backdrop-blur-sm transition-colors",
                     myReactions.has(group.emoji)
-                      ? "bg-primary/20 text-primary"
-                      : "bg-background/50 text-text-secondary",
+                      ? "bg-primary/25 text-primary ring-1 ring-primary/30"
+                      : "bg-background/40 text-text-secondary hover:bg-background/60",
                   )}
                 >
                   {group.emoji} {group.count}
@@ -173,12 +188,21 @@ export function MessageBubble({
             </div>
           )}
 
-          <div className="mt-1 flex items-center justify-end gap-1 text-[11px] text-text-secondary">
+          <div
+            className={cn(
+              "mt-1 flex items-center justify-end gap-1 font-mono text-[10px] tabular-nums",
+              isOwn ? "text-on-primary/70" : "text-text-secondary",
+            )}
+          >
             {message.editedAt && <span>đã sửa · </span>}
             <span>{formatMessageTime(message.createdAt)}</span>
             {isOwn && !isDeleted && (
-              <span className={cn(isRead ? "text-primary" : "text-text-secondary")}>
-                {isRead ? "✓✓" : "✓"}
+              <span className={cn("ml-0.5", isRead ? "text-on-primary" : "opacity-60")}>
+                {isRead ? (
+                  <ChecksIcon size={14} weight="bold" aria-label="Đã xem" />
+                ) : (
+                  <CheckIcon size={14} weight="bold" aria-label="Đã gửi" />
+                )}
               </span>
             )}
           </div>
@@ -226,7 +250,6 @@ export function MessageList({
   onPin,
 }: MessageListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  let lastDay = "";
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -236,38 +259,56 @@ export function MessageList({
   return (
     <div
       ref={scrollRef}
-      className="flex flex-1 flex-col gap-2 overflow-y-auto px-4 py-4"
+      className="chat-scroll-region relative z-10 px-3 py-4 md:px-6"
     >
       {hasMore && (
         <button
           type="button"
           onClick={onLoadMore}
           disabled={isLoadingMore}
-          className="mx-auto rounded-full px-4 py-2 text-sm text-primary"
+          className="pressable mx-auto mb-3 rounded-full border border-border/80 bg-surface-elevated/80 px-4 py-2 text-sm font-medium text-primary shadow-sm backdrop-blur-sm transition-colors hover:border-primary/30 hover:bg-surface-elevated disabled:opacity-50"
         >
           {isLoadingMore ? "Đang tải..." : "Tải tin cũ hơn"}
         </button>
       )}
 
-      {messages.map((message) => {
+      {messages.map((message, index) => {
         const day = dayLabel(message.createdAt);
-        const showDivider = day !== lastDay;
-        lastDay = day;
+        const prev = index > 0 ? messages[index - 1] : null;
+        const next = index < messages.length - 1 ? messages[index + 1] : null;
+        const showDivider = !prev || dayLabel(prev.createdAt) !== day;
+        const isOwn = message.senderId === currentUserId;
+
+        const isGroupedWithPrev =
+          prev &&
+          prev.senderId === message.senderId &&
+          dayLabel(prev.createdAt) === day &&
+          !prev.deletedAt &&
+          !message.deletedAt;
+
+        const isGroupedWithNext =
+          next &&
+          next.senderId === message.senderId &&
+          dayLabel(next.createdAt) === day &&
+          !next.deletedAt &&
+          !message.deletedAt;
 
         return (
           <div key={message.id}>
             {showDivider && (
               <div className="my-4 flex justify-center">
-                <span className="rounded-full bg-surface px-3 py-1 text-xs text-text-secondary">
+                <span className="rounded-full bg-foreground/[0.06] px-3 py-1 text-[11px] font-medium text-text-secondary">
                   {day}
                 </span>
               </div>
             )}
             <MessageBubble
               message={message}
-              isOwn={message.senderId === currentUserId}
+              isOwn={isOwn}
               isRead={isMessageRead(message)}
               showSenderName={showSenderNames}
+              showTail={!isGroupedWithNext}
+              isGrouped={!!isGroupedWithPrev}
               currentUserId={currentUserId}
               onOpenImage={onOpenImage}
               onReply={onReply}

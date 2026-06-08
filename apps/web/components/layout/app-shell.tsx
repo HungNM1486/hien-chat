@@ -19,19 +19,20 @@ export function AppShell({
   className,
 }: AppShellProps) {
   return (
-    <div className="flex min-h-full bg-background md:justify-center">
-      <div className="flex min-h-full w-full max-w-[480px] flex-1 md:max-w-none md:flex-row">
+    <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-transparent md:h-auto md:min-h-full md:p-3 lg:p-5">
+      <div className="theme-shell-frame mx-auto flex h-full min-h-0 w-full max-w-[1280px] flex-1 overflow-hidden md:min-h-[calc(100dvh-1.5rem)] md:rounded-[var(--radius-card,20px)] md:border md:border-border/60 md:bg-surface/75 md:backdrop-blur-xl lg:min-h-[calc(100dvh-2.5rem)]">
         <SidebarNav />
-        <div className="flex min-h-full flex-1 flex-col md:max-w-[480px] md:border-x md:border-border">
+        <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+          <div className="theme-accent-bar hidden shrink-0 md:block" aria-hidden />
           {header}
           <main
             className={cn(
-              "flex flex-1 flex-col overflow-hidden",
+              "flex min-h-0 flex-1 flex-col overflow-hidden",
               !hideBottomNav && "pb-[calc(var(--bottom-nav-height)+var(--safe-area-bottom))] md:pb-0",
               className,
             )}
           >
-            <SafeArea top={!header} bottom={false} className="flex flex-1 flex-col overflow-hidden">
+            <SafeArea top={!header} bottom={false} className="flex min-h-0 flex-1 flex-col overflow-hidden">
               {children}
             </SafeArea>
           </main>

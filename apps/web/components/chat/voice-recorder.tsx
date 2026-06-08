@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { MicrophoneIcon, StopIcon } from "@phosphor-icons/react";
+import { IconButton } from "@/components/ui/icon-button";
 import { cn } from "@/lib/utils";
 
 const MAX_DURATION_SEC = 120;
@@ -119,39 +121,37 @@ export function VoiceRecorder({ onRecorded, disabled }: VoiceRecorderProps) {
 
   return (
     <>
-      <button
-        type="button"
+      <IconButton
+        icon={recording ? StopIcon : MicrophoneIcon}
+        iconWeight={recording ? "fill" : "regular"}
         disabled={disabled}
+        label="Ghi âm"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
         className={cn(
-          "flex h-[var(--composer-min-height)] w-[var(--composer-min-height)] shrink-0 items-center justify-center rounded-full text-lg",
-          recording ? "bg-red-500 text-white" : "bg-surface text-text-primary",
-          disabled && "opacity-40",
+          recording && "bg-accent text-on-primary shadow-[0_4px_16px_rgb(var(--shadow-color)/0.3)]",
         )}
-        aria-label="Ghi âm"
-      >
-        🎤
-      </button>
+      />
 
       {recording && (
-        <div className="fixed inset-x-0 bottom-0 z-[150] flex flex-col items-center bg-black/80 px-4 py-8 text-white">
-          <div className="mb-4 flex h-12 items-end gap-1">
-            {Array.from({ length: 12 }).map((_, i) => (
+        <div className="fixed inset-x-0 bottom-0 z-[150] flex flex-col items-center bg-background/95 px-4 py-10 text-text-primary backdrop-blur-xl">
+          <div className="mb-5 flex h-14 items-end gap-1">
+            {Array.from({ length: 16 }).map((_, i) => (
               <span
                 key={i}
-                className="w-1 animate-pulse rounded-full bg-primary"
+                className="w-1 rounded-full bg-primary"
                 style={{
-                  height: `${12 + ((i * 7 + elapsed) % 5) * 6}px`,
-                  animationDelay: `${i * 0.05}s`,
+                  height: `${10 + ((i * 7 + elapsed) % 6) * 5}px`,
+                  opacity: 0.5 + ((i + elapsed) % 3) * 0.15,
+                  transition: "height 0.15s ease",
                 }}
               />
             ))}
           </div>
-          <p className="text-lg font-semibold">{formatTimer(elapsed)}</p>
-          <p className="mt-2 text-sm text-white/70">
+          <p className="font-mono text-2xl font-semibold tabular-nums">{formatTimer(elapsed)}</p>
+          <p className="mt-3 text-sm text-text-secondary">
             {cancelHint ? "Thả để hủy" : "Vuốt trái để hủy · Thả để gửi"}
           </p>
         </div>

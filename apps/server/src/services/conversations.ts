@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, lt, sql } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, sql } from "drizzle-orm";
 import type {
   ConversationPublic,
   EncryptionMode,
@@ -80,7 +80,7 @@ async function getUnreadCount(
       .limit(1);
 
     if (lastRead) {
-      conditions.push(sql`${messages.createdAt} > ${lastRead.createdAt}`);
+      conditions.push(gt(messages.createdAt, lastRead.createdAt));
     }
   }
 

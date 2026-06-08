@@ -23,6 +23,7 @@ const CORS_ORIGIN = process.env.CORS_ORIGIN ?? "http://localhost:3000";
 async function main() {
   const app = Fastify({
     logger: true,
+    trustProxy: true,
   });
 
   await app.register(helmet, {
@@ -30,8 +31,21 @@ async function main() {
   });
 
   await app.register(rateLimit, {
-    max: 100,
+    max: 600,
     timeWindow: "1 minute",
+    keyGenerator: (request) =>
+      (request.headers["cf-connecting-ip"] as string | undefined) ??
+      (request.headers["x-forwarded-for"] as string | undefined)?.split(",")[0]?.trim() ??
+      request.ip,
+    allowList: (request) => {
+      const path = request.url.split("?")[0] ?? request.url;
+      return (
+        path.startsWith("/auth/refresh") ||
+        path.startsWith("/auth/me") ||
+        path === "/health" ||
+        path === "/ws"
+      );
+    },
   });
 
   await app.register(cors, {

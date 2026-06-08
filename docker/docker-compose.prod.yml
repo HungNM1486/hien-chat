@@ -1,0 +1,150 @@
+# Hiên nhà — Docker Compose production
+#
+# Stack: postgres + redis + minio + server + web
+# Reverse proxy: nginx ngoài stack (docker/nginx/hiennha.conf) trên shared network
+#
+# Chuẩn bị:
+#   1. cp .env.production.example .env && điền secrets
+#   2. docker network create legal-shared-network   # hoặc tên trong SHARED_NETWORK_NAME
+#   3. docker compose -f docker/docker-compose.prod.yml up -d --build
+#
+# Migrate DB (lần đầu hoặc sau upgrade):
+#   docker compose -f docker/docker-compose.prod.yml run --rm migrate
+#
+# NEXT_PUBLIC_API_URL được bake vào web lúc build — đổi domain phải rebuild web.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: hiennha-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: hiennha
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: hiennha
+    volumes:
+      - hiennha_pg_data:/var/lib/postgresql/data
+    networks:
+      - hiennha-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hiennha -d hiennha"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: hiennha-redis
+    restart: unless-stopped
+    networks:
+      - hiennha-internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: hiennha-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD in .env}
+    volumes:
+      - hiennha_minio_data:/data
+    networks:
+      - hiennha-internal
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  migrate:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.server
+    image: hiennha-server:latest
+    container_name: hiennha-migrate
+    env_file: ../.env
+    environment:
+      DATABASE_URL: postgres://hiennha:${POSTGRES_PASSWORD}@postgres:5432/hiennha
+    command: ["node", "dist/db/migrate.js"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - hiennha-internal
+    restart: "no"
+    profiles:
+      - setup
+
+  server:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.server
+    image: hiennha-server:latest
+    container_name: hiennha-server
+    restart: unless-stopped
+    env_file: ../.env
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgres://hiennha:${POSTGRES_PASSWORD}@postgres:5432/hiennha
+      REDIS_URL: redis://redis:6379
+      COOKIE_SECURE: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - hiennha_uploads:/app/uploads
+    networks:
+      - hiennha-internal
+      - shared-edge
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.web
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    image: hiennha-web:latest
+    container_name: hiennha-web
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: "0.0.0.0"
+    depends_on:
+      server:
+        condition: service_healthy
+    networks:
+      - shared-edge
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://0.0.0.0:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  hiennha_pg_data:
+  hiennha_minio_data:
+  hiennha_uploads:
+
+networks:
+  hiennha-internal:
+    driver: bridge
+  shared-edge:
+    external: true
+    name: ${SHARED_NETWORK_NAME:-legal-shared-network}

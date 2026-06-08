@@ -5,8 +5,8 @@
   "start_url": "/chats",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#FFF8F0",
-  "theme_color": "#E8A598",
+  "background_color": "#FFE8F0",
+  "theme_color": "#FF6B9D",
   "icons": [
     {
       "src": "/icons/icon-192.png",

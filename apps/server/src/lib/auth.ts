@@ -92,7 +92,9 @@ export async function revokeRefreshToken(token: string): Promise<void> {
 export function setRefreshCookie(reply: FastifyReply, token: string): void {
   reply.setCookie("refresh_token", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure:
+      process.env.NODE_ENV === "production" ||
+      process.env.COOKIE_SECURE === "true",
     sameSite: "lax",
     path: "/",
     maxAge: REFRESH_EXPIRES_DAYS * 24 * 60 * 60,

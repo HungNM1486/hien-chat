@@ -2,8 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { MessagePublic } from "@hien-nha/shared";
+import {
+  CameraIcon,
+  MicrophoneIcon,
+  PaperPlaneRightIcon,
+  XIcon,
+} from "@phosphor-icons/react";
 import { ReplyPreview } from "@/components/chat/reply-preview";
 import { VoiceRecorder } from "@/components/chat/voice-recorder";
+import { IconButton } from "@/components/ui/icon-button";
 import { cn } from "@/lib/utils";
 
 interface MessageComposerProps {
@@ -88,40 +95,41 @@ export function MessageComposer({
     e.target.value = "";
   };
 
+  const canSend = value.trim().length > 0;
+
   return (
     <div
-      className="shrink-0 border-t border-border bg-surface px-3 py-2"
+      className="chat-column-footer glass-panel border-t px-3 pt-2 md:px-4"
       style={{
         paddingBottom:
-          "max(8px, calc(var(--safe-area-bottom) + var(--keyboard-offset, 0px)))",
+          "max(10px, calc(var(--safe-area-bottom) + var(--keyboard-offset, 0px)))",
       }}
     >
       {replyTo && (
-        <div className="mb-2 flex items-start gap-2 rounded-xl bg-background px-3 py-2">
-          <div className="min-w-0 flex-1">
-            <ReplyPreview message={replyTo} />
+        <div className="mb-2 flex items-start gap-2 rounded-xl border border-border/60 bg-surface/80 px-3 py-2">
+          <div className="min-w-0 flex-1 border-l-2 border-primary pl-2.5">
+            <ReplyPreview message={replyTo} compact />
           </div>
-          <button
-            type="button"
+          <IconButton
+            icon={XIcon}
+            size="sm"
+            label="Hủy trả lời"
             onClick={onCancelReply}
-            className="shrink-0 px-2 text-text-secondary"
-            aria-label="Hủy trả lời"
-          >
-            ✕
-          </button>
+            className="text-text-secondary"
+          />
         </div>
       )}
 
       {uploadProgress != null && (
-        <div className="mb-2 h-1 overflow-hidden rounded-full bg-border">
+        <div className="mb-2 h-0.5 overflow-hidden rounded-full bg-border/70">
           <div
-            className="h-full bg-primary transition-all duration-300"
+            className="h-full rounded-full bg-primary transition-all duration-300"
             style={{ width: `${uploadProgress}%` }}
           />
         </div>
       )}
 
-      <div className="flex items-end gap-2">
+      <div className="flex w-full max-w-full items-end gap-1 pb-1">
         <input
           ref={fileInputRef}
           type="file"
@@ -129,42 +137,60 @@ export function MessageComposer({
           className="hidden"
           onChange={handleFileChange}
         />
-        <button
-          type="button"
-          disabled={disabled || !onSendImage}
-          onClick={() => fileInputRef.current?.click()}
-          className={cn(
-            "flex h-[var(--composer-min-height)] w-10 shrink-0 items-center justify-center rounded-full text-lg",
-            disabled && "opacity-40",
+        <div className="flex shrink-0 items-center gap-0.5">
+          <IconButton
+            icon={CameraIcon}
+            size="sm"
+            disabled={disabled || !onSendImage}
+            label="Gửi ảnh"
+            onClick={() => fileInputRef.current?.click()}
+            className="text-text-secondary"
+          />
+
+          {onSendVoice ? (
+            <VoiceRecorder onRecorded={onSendVoice} disabled={disabled} />
+          ) : (
+            <IconButton
+              icon={MicrophoneIcon}
+              size="sm"
+              disabled
+              label="Ghi âm"
+              className="text-text-secondary"
+            />
           )}
-          aria-label="Gửi ảnh"
-        >
-          📷
-        </button>
+        </div>
 
-        {onSendVoice && (
-          <VoiceRecorder onRecorded={onSendVoice} disabled={disabled} />
-        )}
+        <div className="relative min-w-0 flex-1 basis-0">
+          <textarea
+            ref={textareaRef}
+            value={value}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+            disabled={disabled}
+            rows={1}
+            placeholder={placeholder}
+            className={cn(
+              "block max-h-[120px] min-h-[var(--composer-min-height)] w-full min-w-0 resize-none rounded-[22px]",
+              "border border-border/70 bg-surface px-3 py-2.5 text-[length:var(--font-size-base)] text-text-primary",
+              "outline-none transition-[border-color,box-shadow] placeholder:text-text-secondary/60",
+              "focus:border-primary/40 focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_10%,transparent)]",
+            )}
+          />
+        </div>
 
-        <textarea
-          ref={textareaRef}
-          value={value}
-          onChange={handleChange}
-          onKeyDown={handleKeyDown}
-          disabled={disabled}
-          rows={1}
-          placeholder={placeholder}
-          className="max-h-[120px] min-h-[var(--composer-min-height)] flex-1 resize-none rounded-2xl border border-border bg-background px-4 py-3 text-text-primary outline-none focus:border-primary"
-        />
-        <button
-          type="button"
+        <IconButton
+          icon={PaperPlaneRightIcon}
+          iconWeight="fill"
+          size="sm"
+          variant="primary"
+          label="Gửi"
           onClick={handleSubmit}
-          disabled={disabled || !value.trim()}
-          className="flex h-[var(--composer-min-height)] w-[var(--composer-min-height)] shrink-0 items-center justify-center rounded-full bg-primary text-lg text-on-primary disabled:opacity-40"
-          aria-label="Gửi"
-        >
-          ➤
-        </button>
+          disabled={disabled || !canSend}
+          className={cn(
+            "shrink-0 transition-all duration-200",
+            canSend ? "scale-100 opacity-100" : "scale-90 opacity-35",
+          )}
+        />
       </div>
     </div>
   );

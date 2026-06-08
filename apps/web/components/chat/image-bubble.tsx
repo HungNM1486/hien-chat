@@ -12,7 +12,7 @@ export function ImageBubble({ message, onOpen }: ImageBubbleProps) {
   const image = parseImageContent(message.content);
   if (!image) {
     return (
-      <p className="text-sm italic text-text-secondary">Không tải được ảnh</p>
+      <p className="text-sm italic opacity-70">Không tải được ảnh</p>
     );
   }
 
@@ -22,7 +22,10 @@ export function ImageBubble({ message, onOpen }: ImageBubbleProps) {
     <button
       type="button"
       onClick={() => onOpen(image.url)}
-      className={cn("block overflow-hidden rounded-xl")}
+      className={cn(
+        "pressable block overflow-hidden rounded-xl",
+        "ring-1 ring-black/10 transition-[transform,box-shadow] hover:shadow-lg",
+      )}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img

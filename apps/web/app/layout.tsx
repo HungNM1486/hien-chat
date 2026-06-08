@@ -1,16 +1,23 @@
 import type { Metadata, Viewport } from "next";
-import { Geist } from "next/font/google";
+import { JetBrains_Mono, Nunito } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { CryptoInitProvider } from "@/components/crypto/crypto-init-provider";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { ToastContainer } from "@/components/ui/toast-container";
-import { ServiceWorkerRegister } from "@/components/pwa/service-worker-register";
+import { SwKillScript } from "@/components/pwa/sw-kill-script";
 import { E2EGlobalDialog } from "@/components/chat/e2e-global-dialog";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const nunito = Nunito({
+  variable: "--font-sans",
+  subsets: ["latin", "vietnamese"],
+  weight: ["400", "500", "600", "700", "800"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-mono",
+  subsets: ["latin", "vietnamese"],
+  weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {
@@ -37,7 +44,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#0d1117",
+  themeColor: "#ff6b9d",
 };
 
 export default function RootLayout({
@@ -46,14 +53,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className={`${geistSans.variable} h-full`}>
+    <html lang="vi" className={`${nunito.variable} ${jetbrainsMono.variable} h-full`}>
+      <head>
+        <SwKillScript />
+      </head>
       <body className="min-h-full bg-background text-text-primary antialiased">
         <AuthProvider>
           <CryptoInitProvider>
             <ThemeProvider>
               {children}
               <ToastContainer />
-              <ServiceWorkerRegister />
               <E2EGlobalDialog />
             </ThemeProvider>
           </CryptoInitProvider>

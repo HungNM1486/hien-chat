@@ -1,36 +1,25 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import type { WsClientEvent, WsServerEvent } from "@hien-nha/shared";
 import { getAccessToken } from "@/lib/api-client";
 import { getWsUrl } from "@/lib/chat-api";
 import { useAuthStore } from "@/stores/auth-store";
 import { useChatStore } from "@/stores/chat-store";
 import { useE2EStore } from "@/stores/e2e-store";
+import { dispatchCallServerEvent } from "@/lib/call-signaling-bridge";
 
 const MAX_BACKOFF = 30000;
 
 export function useWebSocket() {
-  const user = useAuthStore((s) => s.user);
+  const userId = useAuthStore((s) => s.user?.id);
   const isInitialized = useAuthStore((s) => s.isInitialized);
   const wsRef = useRef<WebSocket | null>(null);
   const backoffRef = useRef(1000);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const addMessage = useChatStore((s) => s.addMessage);
-  const updateMessage = useChatStore((s) => s.updateMessage);
-  const removeMessage = useChatStore((s) => s.removeMessage);
-  const setTyping = useChatStore((s) => s.setTyping);
-  const setPresence = useChatStore((s) => s.setPresence);
-  const setOtherRead = useChatStore((s) => s.setOtherRead);
-  const setOtherOnline = useChatStore((s) => s.setOtherOnline);
-  const upsertConversation = useChatStore((s) => s.upsertConversation);
-  const addReaction = useChatStore((s) => s.addReaction);
-  const removeReaction = useChatStore((s) => s.removeReaction);
-  const setPendingE2E = useE2EStore((s) => s.setPendingRequest);
-
   useEffect(() => {
-    if (!isInitialized || !user) return;
+    if (!isInitialized || !userId) return;
 
     let closed = false;
 
@@ -66,6 +55,21 @@ export function useWebSocket() {
     };
 
     const handleEvent = (data: WsServerEvent) => {
+      const {
+        addMessage,
+        updateMessage,
+        removeMessage,
+        setTyping,
+        setPresence,
+        setOtherRead,
+        setOtherOnline,
+        upsertConversation,
+        addReaction,
+        removeReaction,
+        conversations,
+      } = useChatStore.getState();
+      const setPendingE2E = useE2EStore.getState().setPendingRequest;
+
       switch (data.type) {
         case "message:new":
           addMessage(data.message);
@@ -84,7 +88,7 @@ export function useWebSocket() {
           break;
         case "presence:update":
           setPresence(data.userId, data.status, data.lastSeen);
-          for (const c of useChatStore.getState().conversations) {
+          for (const c of conversations) {
             if (c.otherUserId === data.userId) {
               setOtherOnline(c.id, data.status === "online");
             }
@@ -117,6 +121,9 @@ export function useWebSocket() {
         case "e2e:enabled":
         case "e2e:disabled":
           break;
+        default:
+          dispatchCallServerEvent(data);
+          break;
       }
     };
 
@@ -125,29 +132,26 @@ export function useWebSocket() {
     return () => {
       closed = true;
       if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
-      wsRef.current?.close();
+      const ws = wsRef.current;
+      if (ws) {
+        ws.onclose = null;
+        ws.onopen = null;
+        ws.onmessage = null;
+        if (ws.readyState === WebSocket.CONNECTING) {
+          ws.onopen = () => ws.close();
+        } else {
+          ws.close();
+        }
+        wsRef.current = null;
+      }
     };
-  }, [
-    user,
-    isInitialized,
-    addMessage,
-    updateMessage,
-    removeMessage,
-    setTyping,
-    setPresence,
-    setOtherRead,
-    setOtherOnline,
-    upsertConversation,
-    addReaction,
-    removeReaction,
-    setPendingE2E,
-  ]);
+  }, [userId, isInitialized]);
 
-  const send = (event: WsClientEvent) => {
+  const send = useCallback((event: WsClientEvent) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify(event));
     }
-  };
+  }, []);
 
   return { send };
 }

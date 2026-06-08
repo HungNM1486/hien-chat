@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { CaretLeftIcon } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 interface AppHeaderProps {
   title: string;
+  subtitle?: string;
   backHref?: string;
   right?: React.ReactNode;
   className?: string;
@@ -13,6 +15,7 @@ interface AppHeaderProps {
 
 export function AppHeader({
   title,
+  subtitle,
   backHref,
   right,
   className,
@@ -21,41 +24,46 @@ export function AppHeader({
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 flex h-[var(--header-height)] shrink-0 items-center gap-3 border-b border-border bg-surface/95 px-4 backdrop-blur",
+        "chat-column-header glass-panel z-40 flex flex-col border-b",
         className,
       )}
       style={{ paddingTop: "var(--safe-area-top)" }}
     >
-      {backHref && (
-        <Link
-          href={backHref}
-          className="flex min-h-[var(--touch-target)] min-w-[var(--touch-target)] items-center justify-center rounded-full text-primary"
-          aria-label="Quay lại"
-        >
-          ←
-        </Link>
-      )}
-      <h1
-        className={cn(
-          "flex-1 truncate text-base font-semibold text-text-primary",
-          !backHref && "pl-0",
-          onTitleClick && "cursor-pointer",
+      <div className="theme-accent-bar shrink-0 md:hidden" aria-hidden />
+      <div className="flex h-[var(--header-height)] items-center gap-1 px-3 md:px-4">
+        {backHref && (
+          <Link
+            href={backHref}
+            className="pressable -ml-1 flex min-h-[var(--touch-target)] min-w-[var(--touch-target)] items-center justify-center rounded-full text-primary transition-colors hover:bg-primary/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+            aria-label="Quay lại"
+          >
+            <CaretLeftIcon size={22} weight="bold" aria-hidden />
+          </Link>
         )}
-        onClick={onTitleClick}
-        onKeyDown={
-          onTitleClick
-            ? (e) => {
-                if (e.key === "Enter" || e.key === " ") onTitleClick();
-              }
-            : undefined
-        }
-        role={onTitleClick ? "button" : undefined}
-        tabIndex={onTitleClick ? 0 : undefined}
-      >
-        {title}
-      </h1>
-      <div className="flex min-w-[var(--touch-target)] items-center justify-end">
-        {right}
+        <div
+          className={cn(
+            "min-w-0 flex-1",
+            onTitleClick && "cursor-pointer rounded-lg px-1 py-0.5 transition-colors hover:bg-foreground/[0.04]",
+          )}
+          onClick={onTitleClick}
+          onKeyDown={
+            onTitleClick
+              ? (e) => {
+                  if (e.key === "Enter" || e.key === " ") onTitleClick();
+                }
+              : undefined
+          }
+          role={onTitleClick ? "button" : undefined}
+          tabIndex={onTitleClick ? 0 : undefined}
+        >
+          <h1 className="truncate text-[17px] font-semibold tracking-tight text-text-primary">
+            {title}
+          </h1>
+          {subtitle && (
+            <p className="truncate text-[12px] text-text-secondary">{subtitle}</p>
+          )}
+        </div>
+        <div className="flex items-center justify-end gap-0.5">{right}</div>
       </div>
     </header>
   );

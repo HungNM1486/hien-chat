@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { parseVoiceContent, type MessagePublic } from "@hien-nha/shared";
+import { PauseIcon, PlayIcon } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 function formatDuration(seconds: number): string {
@@ -29,7 +30,7 @@ export function VoiceBubble({ message, isOwn }: VoiceBubbleProps) {
 
   if (!voice) {
     return (
-      <p className="text-sm italic text-text-secondary">Không phát được tin thoại</p>
+      <p className="text-sm italic opacity-70">Không phát được tin thoại</p>
     );
   }
 
@@ -65,24 +66,38 @@ export function VoiceBubble({ message, isOwn }: VoiceBubbleProps) {
     <button
       type="button"
       onClick={togglePlay}
-      className="flex min-w-[180px] items-center gap-3 text-left"
+      className="pressable flex min-w-[190px] items-center gap-3 text-left"
     >
       <span
         className={cn(
-          "flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm",
-          isOwn ? "bg-primary/20 text-primary" : "bg-background/60",
+          "flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors",
+          isOwn
+            ? "bg-on-primary/15 text-on-primary"
+            : "bg-primary/15 text-primary",
         )}
       >
-        {playing ? "⏸" : "▶"}
+        {playing ? (
+          <PauseIcon size={18} weight="fill" aria-hidden />
+        ) : (
+          <PlayIcon size={18} weight="fill" aria-hidden />
+        )}
       </span>
       <div className="min-w-0 flex-1">
-        <div className="h-1.5 overflow-hidden rounded-full bg-border">
+        <div className="h-1.5 overflow-hidden rounded-full bg-border/60">
           <div
-            className="h-full rounded-full bg-primary transition-all"
+            className={cn(
+              "h-full rounded-full transition-all",
+              isOwn ? "bg-on-primary/80" : "bg-primary",
+            )}
             style={{ width: `${progress * 100}%` }}
           />
         </div>
-        <p className="mt-1 text-xs text-text-secondary">
+        <p
+          className={cn(
+            "mt-1.5 font-mono text-[11px] tabular-nums",
+            isOwn ? "text-on-primary/70" : "text-text-secondary",
+          )}
+        >
           {formatDuration(voice.duration)}
         </p>
       </div>

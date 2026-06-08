@@ -8,6 +8,10 @@ import type {
   PresenceStatus,
 } from "@hien-nha/shared";
 
+/** Stable fallbacks — never use `?? []` inline in selectors (causes infinite re-renders). */
+export const EMPTY_MESSAGES: MessagePublic[] = [];
+export const EMPTY_TYPING_USERS: string[] = [];
+
 interface ChatState {
   conversations: ConversationPublic[];
   messagesByConversation: Record<string, MessagePublic[]>;
@@ -49,7 +53,7 @@ interface ChatState {
   ) => void;
 }
 
-export const useChatStore = create<ChatState>((set, get) => ({
+export const useChatStore = create<ChatState>((set) => ({
   conversations: [],
   messagesByConversation: {},
   typingByConversation: {},
@@ -185,20 +189,30 @@ export const useChatStore = create<ChatState>((set, get) => ({
     })),
 
   setOtherRead: (conversationId, messageId) =>
-    set((state) => ({
-      otherReadByConversation: {
-        ...state.otherReadByConversation,
-        [conversationId]: messageId,
-      },
-    })),
+    set((state) => {
+      if (state.otherReadByConversation[conversationId] === messageId) {
+        return state;
+      }
+      return {
+        otherReadByConversation: {
+          ...state.otherReadByConversation,
+          [conversationId]: messageId,
+        },
+      };
+    }),
 
   setOtherOnline: (conversationId, online) =>
-    set((state) => ({
-      otherOnlineByConversation: {
-        ...state.otherOnlineByConversation,
-        [conversationId]: online,
-      },
-    })),
+    set((state) => {
+      if (state.otherOnlineByConversation[conversationId] === online) {
+        return state;
+      }
+      return {
+        otherOnlineByConversation: {
+          ...state.otherOnlineByConversation,
+          [conversationId]: online,
+        },
+      };
+    }),
 
   setActiveConversation: (id) => set({ activeConversationId: id }),
 
@@ -206,11 +220,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set({ isLoadingConversations: loading }),
 
   clearUnread: (conversationId) =>
-    set((state) => ({
-      conversations: state.conversations.map((c) =>
-        c.id === conversationId ? { ...c, unreadCount: 0 } : c,
-      ),
-    })),
+    set((state) => {
+      const target = state.conversations.find((c) => c.id === conversationId);
+      if (!target || target.unreadCount === 0) return state;
+      return {
+        conversations: state.conversations.map((c) =>
+          c.id === conversationId ? { ...c, unreadCount: 0 } : c,
+        ),
+      };
+    }),
 
   addReaction: (conversationId, messageId, reaction) =>
     set((state) => {

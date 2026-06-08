@@ -144,7 +144,7 @@ App Theme (global)
 | ID | Tên | Phong cách | Palette gợi ý |
 |---|---|---|---|
 | `warm-home` | Ấm Cúng | Gia đình, pastel ấm | #FFF8F0 · #E8A598 · #5C4033 |
-| `midnight` | Đêm Khuya | Dark mode mặc định | #0D1117 · #58A6FF · #C9D1D9 |
+| `midnight` | Hiên đêm | Dark mặc định, ấm | #12100E · #C8715A · #E8E2DA |
 | `forest` | Rừng Xanh | Thiên nhiên, dịu mắt | #1B4332 · #95D5B2 · #F1FAEE |
 | `ocean` | Đại Dương | Xanh biển, sáng | #0077B6 · #CAF0F8 · #023E8A |
 | `lavender` | Oải Hương | Nhẹ nhàng, nữ tính | #E6E6FA · #9370DB · #4A4E69 |
@@ -164,24 +164,24 @@ App Theme (global)
 ```json
 {
   "colors": {
-    "background": "#0D1117",
-    "surface": "#161B22",
-    "primary": "#58A6FF",
-    "onPrimary": "#FFFFFF",
-    "bubbleSent": "#238636",
-    "bubbleReceived": "#21262D",
-    "textPrimary": "#C9D1D9",
-    "textSecondary": "#8B949E",
-    "accent": "#F78166"
+    "background": "#12100E",
+    "surface": "#1C1916",
+    "primary": "#C8715A",
+    "onPrimary": "#FFFAF7",
+    "bubbleSent": "#A85D42",
+    "bubbleReceived": "#2A2620",
+    "textPrimary": "#E8E2DA",
+    "textSecondary": "#9A9288",
+    "accent": "#E07A5F"
   },
   "typography": {
-    "fontFamily": "Inter, system-ui",
+    "fontFamily": "Geist, system-ui",
     "fontSizeBase": 16,
     "fontSizeLarge": 20
   },
   "radius": {
-    "bubble": 18,
-    "card": 12
+    "bubble": 20,
+    "card": 16
   },
   "spacing": {
     "compact": 8,
@@ -189,6 +189,8 @@ App Theme (global)
   }
 }
 ```
+
+> **Cập nhật UI (2026):** Giao diện web dùng glass surfaces, icon Phosphor, avatar squircle, bottom sheet có drag handle. Theme `midnight` đổi tên *Hiên đêm* với palette terracotta thay clone GitHub dark.
 
 ### 5.4. Accessibility
 
@@ -253,22 +255,26 @@ App Theme (global)
 
 ### 7.2. Màn hình chính
 
+Wireframe logic (đã triển khai trên web):
+
 ```
 ┌──────────────────────────────┐
-│  Hiên nhà          [🔔] [⚙] │
+│  Hiên nhà     [+] [⚙]       │  ← glass header + subtitle
+│  Chuyện nhà trên hiên        │
 │  ─────────────────────────── │
 │  🔍 Tìm cuộc trò chuyện...   │
 │                              │
-│  👨‍👩‍👧 Gia đình          14:32 │
-│     Mai đi chợ nhé 🛒        │
+│  [avatar] Gia đình      14:32│  ← squircle avatar, unread badge
+│           Mai đi chợ nhé     │
 │                              │
-│  🔒 Mẹ · riêng tư     Hôm qua │
-│     [Tin mã hóa]             │
-│                              │
-│  👤 Anh Hai            T2     │
-│     Ok em                  │
+│  🔒 Mẹ · riêng tư   Hôm qua  │
+│           [preview tin]      │
+└──────────────────────────────┘
+│  Chats  │  Cài đặt           │  ← bottom nav + pill active
 └──────────────────────────────┘
 ```
+
+Icon dùng **Phosphor** (không emoji). Sheet tạo chat / cài đặt / nhóm: **bottom sheet** kính mờ.
 
 ### 7.3. Cài đặt E2E trong cuộc chat
 

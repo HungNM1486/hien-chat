@@ -1,3 +1,4 @@
+import { getThemeVisualExtras } from "./identity.js";
 import type { FontSizeOption, ThemeTokens } from "./types.js";
 
 const CSS_VAR_MAP: Record<keyof ThemeTokens["colors"], string> = {
@@ -53,9 +54,18 @@ export function applyThemeToElement(
     withTransition?: boolean;
   },
 ): void {
+  const extras = getThemeVisualExtras(theme.id);
   const vars = {
     ...themeToCssVariables(theme),
     ...(options?.fontSize ? fontSizeToCssVariables(options.fontSize) : {}),
+    ...(extras
+      ? {
+          "--shadow-color": extras.shadowColor,
+          "--bubble-sent-end": extras.bubbleSentEnd,
+          "--radius-bubble": extras.radiusBubble,
+          "--radius-card": extras.radiusCard,
+        }
+      : {}),
   };
 
   if (options?.withTransition === false) {

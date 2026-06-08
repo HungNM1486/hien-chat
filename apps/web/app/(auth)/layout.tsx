@@ -1,4 +1,5 @@
 import { GuestGuard } from "@/components/auth/guest-guard";
+import { AuthShell } from "@/components/auth/auth-shell";
 
 export default function AuthLayout({
   children,
@@ -7,9 +8,7 @@ export default function AuthLayout({
 }) {
   return (
     <GuestGuard>
-      <div className="flex min-h-full items-center justify-center bg-background px-4 py-8">
-        <div className="w-full max-w-[390px]">{children}</div>
-      </div>
+      <AuthShell>{children}</AuthShell>
     </GuestGuard>
   );
 }

@@ -23,7 +23,7 @@ export function useE2ECrypto(
 
     async function init() {
       if (encryptionMode !== "e2e" || !remoteUserId) {
-        setReady(true);
+        if (!cancelled) setReady((prev) => prev || true);
         return;
       }
 
@@ -77,6 +77,7 @@ export function useE2ECrypto(
             result.push({
               ...msg,
               content: "Không thể giải mã — thử xác minh lại khóa",
+              encrypted: false,
             });
           }
         }

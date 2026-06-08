@@ -96,7 +96,7 @@ export interface VoiceContent {
   duration: number;
 }
 
-export interface Hiên nhàeaction {
+export interface MessageReaction {
   emoji: string;
   userId: string;
   user?: Pick<UserPublic, "id" | "displayName">;
@@ -114,7 +114,7 @@ export interface MessagePublic {
     MessagePublic,
     "id" | "content" | "contentType" | "senderId" | "sender"
   > | null;
-  reactions?: Hiên nhàeaction[];
+  reactions?: MessageReaction[];
   createdAt: string;
   editedAt: string | null;
   deletedAt: string | null;

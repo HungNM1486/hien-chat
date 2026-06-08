@@ -28,21 +28,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const isInitialized = useAuthStore((s) => s.isInitialized);
   const setUser = useAuthStore((s) => s.setUser);
   const initialApplied = useRef(false);
-  const [prefersDark, setPrefersDark] = useState(false);
+  const [prefersDark, setPrefersDark] = useState(() =>
+    typeof window === "undefined"
+      ? false
+      : window.matchMedia("(prefers-color-scheme: dark)").matches,
+  );
 
-  const themeId = (user?.settings?.theme as ThemeId | undefined) ?? "midnight";
+  const themeId = (user?.settings?.theme as ThemeId | undefined) ?? "warm-home";
   const fontSize = user?.settings?.fontSize ?? "normal";
   const reduceMotion = user?.settings?.reduceMotion ?? false;
 
-  const getPrefersDark = useCallback(() => prefersDark, [prefersDark]);
-
-  useEffect(() => {
-    setPrefersDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
-  }, []);
-
   const applyAll = useCallback(
     (opts?: { withTransition?: boolean }) => {
-      const theme = resolveThemeId(themeId, getPrefersDark());
+      const theme = resolveThemeId(themeId, prefersDark);
       applyThemeToElement(document.documentElement, theme, {
         fontSize,
         withTransition: opts?.withTransition ?? true,
@@ -65,10 +63,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (themeId !== "system") return;
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const handler = () => applyAll();
+    const handler = (event: MediaQueryListEvent) => setPrefersDark(event.matches);
     mq.addEventListener("change", handler);
     return () => mq.removeEventListener("change", handler);
-  }, [themeId, applyAll]);
+  }, [themeId]);
 
   const patchSettings = async (
     settings: Record<string, unknown>,

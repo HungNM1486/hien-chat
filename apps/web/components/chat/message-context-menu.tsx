@@ -1,6 +1,7 @@
 "use client";
 
 import type { MessagePublic } from "@hien-nha/shared";
+import { PushPinIcon } from "@phosphor-icons/react";
 
 const QUICK_EMOJIS = ["❤️", "👍", "😂", "😮", "😢"];
 
@@ -28,19 +29,19 @@ export function MessageContextMenu({
   return (
     <div className="fixed inset-0 z-[120]" onClick={onClose}>
       <div
-        className="absolute rounded-2xl border border-border bg-surface p-2 shadow-lg"
+        className="absolute min-w-[200px] overflow-hidden rounded-2xl border border-border/70 bg-surface-elevated/95 p-2 shadow-[0_16px_48px_rgb(var(--shadow-color)/0.35)] backdrop-blur-xl"
         style={{
           left: Math.min(position.x, window.innerWidth - 220),
-          top: Math.min(position.y, window.innerHeight - 120),
+          top: Math.min(position.y, window.innerHeight - 140),
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-2 flex gap-1">
+        <div className="mb-1 flex justify-center gap-0.5 rounded-xl bg-background/40 p-1">
           {QUICK_EMOJIS.map((emoji) => (
             <button
               key={emoji}
               type="button"
-              className="flex h-10 w-10 items-center justify-center rounded-full text-xl active:bg-white/10"
+              className="pressable flex h-10 w-10 items-center justify-center rounded-xl text-xl transition-colors hover:bg-foreground/5"
               onClick={() => {
                 onReaction(message.id, emoji);
                 onClose();
@@ -52,7 +53,7 @@ export function MessageContextMenu({
         </div>
         <button
           type="button"
-          className="flex w-full rounded-xl px-4 py-3 text-left text-sm active:bg-white/5"
+          className="pressable flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors hover:bg-foreground/5"
           onClick={() => {
             onReply(message);
             onClose();
@@ -63,12 +64,13 @@ export function MessageContextMenu({
         {onPin && (
           <button
             type="button"
-            className="flex w-full rounded-xl px-4 py-3 text-left text-sm active:bg-white/5"
+            className="pressable flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors hover:bg-foreground/5"
             onClick={() => {
               onPin(message);
               onClose();
             }}
           >
+            <PushPinIcon size={16} aria-hidden />
             Ghim tin
           </button>
         )}

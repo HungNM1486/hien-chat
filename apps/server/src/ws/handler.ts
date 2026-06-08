@@ -7,6 +7,7 @@ import {
   isConversationMember,
   markConversationRead,
 } from "../services/conversations.js";
+import { cleanupCallsOnDisconnect, handleCallEvent } from "./call-handler.js";
 import { wsHub } from "./hub.js";
 
 const typingTimers = new Map<string, ReturnType<typeof setTimeout>>();
@@ -137,6 +138,15 @@ export async function wsRoutes(app: FastifyInstance) {
           case "ping":
             wsHub.send(socket, { type: "pong" });
             break;
+          case "call:invite":
+          case "call:accept":
+          case "call:reject":
+          case "call:offer":
+          case "call:answer":
+          case "call:ice":
+          case "call:hangup":
+            await handleCallEvent(userId, event);
+            break;
         }
       } catch {
         // ignore malformed messages
@@ -145,6 +155,7 @@ export async function wsRoutes(app: FastifyInstance) {
 
     socket.on("close", () => {
       clearInterval(pingInterval);
+      cleanupCallsOnDisconnect(userId);
       wsHub.removeConnection(socket);
       if (!wsHub.isOnline(userId)) {
         wsHub.broadcastPresence(userId, "offline");

@@ -44,12 +44,12 @@ export default function RegisterPage() {
   });
 
   return (
-    <div className="rounded-2xl border border-border bg-surface p-6 shadow-lg">
-      <div className="mb-6 flex justify-center">
-        <Logo markSize={44} />
+    <div className="theme-card settings-card bg-surface/95 p-7 backdrop-blur-sm sm:p-8">
+      <div className="mb-6 flex justify-center sm:hidden">
+        <Logo showTagline markSize={44} />
       </div>
       <div className="mb-6 text-center">
-        <h1 className="text-2xl font-bold text-text-primary">Tạo tài khoản</h1>
+        <h1 className="text-2xl font-semibold text-text-primary">Tạo tài khoản</h1>
         <p className="mt-2 text-sm text-text-secondary">
           Cần mã mời từ người quản lý
         </p>
@@ -60,7 +60,7 @@ export default function RegisterPage() {
           <input
             type="text"
             autoComplete="name"
-            className="field-input"
+            className="input-field"
             placeholder="Tên của bạn"
             {...register("displayName")}
           />
@@ -70,7 +70,7 @@ export default function RegisterPage() {
           <input
             type="email"
             autoComplete="email"
-            className="field-input"
+            className="input-field"
             placeholder="email@example.com"
             {...register("email")}
           />
@@ -80,7 +80,7 @@ export default function RegisterPage() {
           <input
             type="password"
             autoComplete="new-password"
-            className="field-input"
+            className="input-field"
             placeholder="Tối thiểu 8 ký tự"
             {...register("password")}
           />
@@ -89,48 +89,27 @@ export default function RegisterPage() {
         <Field label="Mã mời" error={errors.inviteCode?.message}>
           <input
             type="text"
-            className="field-input"
+            className="input-field"
             placeholder="WELCOME2024"
             {...register("inviteCode")}
           />
         </Field>
 
         {error && (
-          <p className="rounded-xl bg-accent/10 px-4 py-3 text-sm text-accent">
-            {error}
-          </p>
+          <p className="rounded-2xl border border-accent/20 bg-accent/10 px-4 py-3 text-sm text-accent">{error}</p>
         )}
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="flex min-h-[var(--touch-target)] w-full items-center justify-center rounded-xl bg-primary font-semibold text-on-primary transition-opacity disabled:opacity-60"
-        >
+        <button type="submit" disabled={isSubmitting} className="btn-primary w-full">
           {isSubmitting ? "Đang tạo..." : "Đăng ký"}
         </button>
       </form>
 
       <p className="mt-6 text-center text-sm text-text-secondary">
         Đã có tài khoản?{" "}
-        <Link href="/login" className="font-medium text-primary">
+        <Link href="/login" className="font-medium text-primary hover:underline">
           Đăng nhập
         </Link>
       </p>
-
-      <style jsx global>{`
-        .field-input {
-          width: 100%;
-          border-radius: 0.75rem;
-          border: 1px solid var(--border);
-          background: var(--background);
-          padding: 0.75rem 1rem;
-          color: var(--text-primary);
-          outline: none;
-        }
-        .field-input:focus {
-          border-color: var(--primary);
-        }
-      `}</style>
     </div>
   );
 }
@@ -141,16 +120,14 @@ function Field({
   children,
 }: {
   label: string;
-  error?: string;
+  error?: unknown;
   children: React.ReactNode;
 }) {
   return (
     <div>
-      <label className="mb-2 block text-sm font-medium text-text-secondary">
-        {label}
-      </label>
+      <label className="mb-2 block text-sm font-medium text-text-secondary">{label}</label>
       {children}
-      {error && <p className="mt-1 text-sm text-accent">{error}</p>}
+      {error ? <p className="mt-1.5 text-sm text-accent">{String(error)}</p> : null}
     </div>
   );
 }

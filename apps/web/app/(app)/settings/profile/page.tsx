@@ -1,8 +1,10 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { CameraIcon } from "@phosphor-icons/react";
 import { AppShell } from "@/components/layout/app-shell";
 import { AppHeader } from "@/components/layout/app-header";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { updateProfile, uploadAvatar } from "@/lib/user-api";
 import { useAuthStore } from "@/stores/auth-store";
 import { toast } from "@/stores/toast-store";
@@ -43,29 +45,24 @@ export default function ProfileSettingsPage() {
   };
 
   return (
-    <AppShell header={<AppHeader title="Hồ sơ" backHref="/settings" />}>
+    <AppShell header={<AppHeader title="Hồ sơ" subtitle="Thông tin cá nhân" backHref="/settings" />}>
       <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-4 py-6">
-        <div className="flex flex-col items-center gap-4">
+        <div className="flex flex-col items-center gap-3">
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
             disabled={uploading}
-            className="relative"
+            className="group relative"
           >
-            {user?.avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={user.avatarUrl}
-                alt=""
-                className="h-24 w-24 rounded-full object-cover"
-              />
-            ) : (
-              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-primary/15 text-3xl font-semibold text-primary">
-                {user?.displayName?.charAt(0)?.toUpperCase()}
-              </div>
-            )}
-            <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 text-sm text-white opacity-0 transition-opacity active:opacity-100">
-              {uploading ? "..." : "Đổi ảnh"}
+            <UserAvatar
+              name={user?.displayName}
+              avatarUrl={user?.avatarUrl}
+              size="xl"
+              ring
+            />
+            <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-[28px] bg-black/50 text-white opacity-0 transition-opacity group-hover:opacity-100 group-active:opacity-100">
+              <CameraIcon size={22} aria-hidden />
+              <span className="text-xs font-medium">{uploading ? "..." : "Đổi ảnh"}</span>
             </span>
           </button>
           <input
@@ -90,7 +87,7 @@ export default function ProfileSettingsPage() {
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             maxLength={64}
-            className="w-full rounded-xl border border-border bg-background px-4 py-3 text-text-primary outline-none focus:border-primary"
+            className="input-field"
           />
         </div>
 
@@ -102,7 +99,7 @@ export default function ProfileSettingsPage() {
             type="email"
             value={user?.email ?? ""}
             disabled
-            className="w-full rounded-xl border border-border bg-surface px-4 py-3 text-text-secondary"
+            className="input-field opacity-70"
           />
         </div>
 
@@ -110,7 +107,7 @@ export default function ProfileSettingsPage() {
           type="button"
           onClick={handleSave}
           disabled={saving || !displayName.trim()}
-          className="flex min-h-[var(--touch-target)] items-center justify-center rounded-xl bg-primary font-semibold text-on-primary disabled:opacity-50"
+          className="btn-primary w-full"
         >
           {saving ? "Đang lưu..." : "Lưu thay đổi"}
         </button>

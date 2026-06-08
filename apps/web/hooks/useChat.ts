@@ -13,10 +13,10 @@ import {
   sendMessage as sendMessageApi,
   uploadMedia,
 } from "@/lib/chat-api";
-import { useWebSocket } from "@/hooks/useWebSocket";
+import { useWsSend } from "@/contexts/ws-context";
 import { useE2ECrypto } from "@/hooks/useE2ECrypto";
 import { useAuthStore } from "@/stores/auth-store";
-import { useChatStore } from "@/stores/chat-store";
+import { useChatStore, EMPTY_MESSAGES, EMPTY_TYPING_USERS } from "@/stores/chat-store";
 import { toast } from "@/stores/toast-store";
 
 function buildOptimisticMessage(
@@ -50,13 +50,13 @@ function buildOptimisticMessage(
 
 export function useChat(conversationId: string) {
   const user = useAuthStore((s) => s.user);
-  const { send } = useWebSocket();
+  const send = useWsSend();
 
   const messages = useChatStore(
-    (s) => s.messagesByConversation[conversationId] ?? [],
+    (s) => s.messagesByConversation[conversationId] ?? EMPTY_MESSAGES,
   );
   const typingUsers = useChatStore(
-    (s) => s.typingByConversation[conversationId] ?? [],
+    (s) => s.typingByConversation[conversationId] ?? EMPTY_TYPING_USERS,
   );
   const otherReadMessageId = useChatStore(
     (s) => s.otherReadByConversation[conversationId] ?? null,
@@ -95,16 +95,28 @@ export function useChat(conversationId: string) {
   const [replyTo, setReplyTo] = useState<MessagePublic | null>(null);
   const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const sendRef = useRef(send);
+  const decryptMessagesRef = useRef(decryptMessages);
+  const sendChatMessageRef = useRef<(content: string) => void>(() => {});
+
+  useEffect(() => {
+    sendRef.current = send;
+  }, [send]);
+
+  useEffect(() => {
+    decryptMessagesRef.current = decryptMessages;
+  }, [decryptMessages]);
+
   useEffect(() => {
     setActiveConversation(conversationId);
     clearUnread(conversationId);
-    send({ type: "subscribe", conversationId });
+    sendRef.current({ type: "subscribe", conversationId });
 
     return () => {
-      send({ type: "unsubscribe", conversationId });
+      sendRef.current({ type: "unsubscribe", conversationId });
       setActiveConversation(null);
     };
-  }, [conversationId, send, setActiveConversation, clearUnread]);
+  }, [conversationId, setActiveConversation, clearUnread]);
 
   useEffect(() => {
     let cancelled = false;
@@ -120,7 +132,7 @@ export function useChat(conversationId: string) {
         if (cancelled) return;
 
         upsertConversation(convData.conversation);
-        const decrypted = await decryptMessages(messagesData.messages);
+        const decrypted = await decryptMessagesRef.current(messagesData.messages);
         setMessages(conversationId, decrypted);
         setOtherRead(conversationId, convData.otherReadMessageId);
         setOtherOnline(conversationId, convData.otherUserOnline);
@@ -130,7 +142,7 @@ export function useChat(conversationId: string) {
         const last = messagesData.messages.at(-1);
         if (last) {
           await markConversationRead(conversationId, last.id);
-          send({
+          sendRef.current({
             type: "message:read",
             conversationId,
             messageId: last.id,
@@ -145,23 +157,28 @@ export function useChat(conversationId: string) {
     return () => {
       cancelled = true;
     };
-  }, [
-    conversationId,
-    setMessages,
-    setOtherRead,
-    setOtherOnline,
-    upsertConversation,
-    send,
-    decryptMessages,
-  ]);
+  }, [conversationId, setMessages, setOtherRead, setOtherOnline, upsertConversation]);
 
   useEffect(() => {
     if (conversation?.encryptionMode !== "e2e" || !e2eReady) return;
-    const needsDecrypt = messages.some((m) => isEncryptedPayload(m.content));
-    if (!needsDecrypt) return;
-    void decryptMessages(messages).then((decrypted) =>
-      setMessages(conversationId, decrypted),
+    const needsDecrypt = messages.some(
+      (m) => m.encrypted || isEncryptedPayload(m.content),
     );
+    if (!needsDecrypt) return;
+
+    let cancelled = false;
+    void decryptMessages(messages).then((decrypted) => {
+      if (cancelled) return;
+      const stillEncrypted = decrypted.some(
+        (m) => m.encrypted || isEncryptedPayload(m.content),
+      );
+      if (stillEncrypted) return;
+      setMessages(conversationId, decrypted);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [
     messages,
     conversation?.encryptionMode,
@@ -174,7 +191,7 @@ export function useChat(conversationId: string) {
   const replaceOptimistic = useCallback(
     (optimisticId: string, message: MessagePublic) => {
       const current =
-        useChatStore.getState().messagesByConversation[conversationId] ?? [];
+        useChatStore.getState().messagesByConversation[conversationId] ?? EMPTY_MESSAGES;
       const withoutTemp = current.filter((m) => m.id !== optimisticId);
       if (!withoutTemp.some((m) => m.id === message.id)) {
         setMessages(conversationId, [...withoutTemp, message]);
@@ -189,7 +206,7 @@ export function useChat(conversationId: string) {
     (optimisticId: string) => {
       setMessages(
         conversationId,
-        (useChatStore.getState().messagesByConversation[conversationId] ?? [])
+        (useChatStore.getState().messagesByConversation[conversationId] ?? EMPTY_MESSAGES)
           .filter((m) => m.id !== optimisticId),
       );
     },
@@ -255,7 +272,7 @@ export function useChat(conversationId: string) {
         dropOptimistic(optimisticId);
         toast("Gửi tin thất bại", "error", {
           label: "Thử lại",
-          onClick: () => sendChatMessage(content),
+          onClick: () => sendChatMessageRef.current(content),
         });
       } finally {
         setIsSending(false);
@@ -273,6 +290,12 @@ export function useChat(conversationId: string) {
       decryptMessages,
     ],
   );
+
+  useEffect(() => {
+    sendChatMessageRef.current = (content) => {
+      void sendChatMessage(content);
+    };
+  }, [sendChatMessage]);
 
   const sendImage = useCallback(
     async (file: File) => {

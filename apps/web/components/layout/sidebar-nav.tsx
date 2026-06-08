@@ -2,43 +2,56 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ChatCircleDotsIcon, GearSixIcon } from "@phosphor-icons/react";
 import { Logo } from "@/components/brand/logo";
+import { LogoMark } from "@/components/brand/logo-mark";
+import { ThemeBadge } from "@/components/theme/theme-badge";
+import { ThemeTagline } from "@/components/theme/theme-tagline";
+import { useTheme } from "@/components/theme/theme-provider";
 import { cn } from "@/lib/utils";
 
 const items = [
-  { href: "/chats", label: "Chats" },
-  { href: "/settings", label: "Cài đặt" },
+  { href: "/chats", label: "Tin nhắn", icon: ChatCircleDotsIcon },
+  { href: "/settings", label: "Cài đặt", icon: GearSixIcon },
 ];
 
 export function SidebarNav() {
   const pathname = usePathname();
+  const { activeTheme } = useTheme();
 
   return (
-    <aside className="hidden w-80 shrink-0 flex-col border-r border-border bg-surface md:flex">
-      <div
-        className="flex h-[var(--header-height)] items-center border-b border-border px-4"
-        style={{ paddingTop: "var(--safe-area-top)" }}
-      >
-        <Logo markSize={36} />
+    <aside className="hidden w-[72px] shrink-0 flex-col items-center border-r border-border/50 bg-surface py-4 md:flex xl:w-56 xl:items-stretch xl:px-3">
+      <div className="relative z-10 mb-4 hidden w-full px-2 xl:block">
+        <Logo markSize={32} />
+        <div className="mt-3 space-y-2">
+          <ThemeBadge themeId={activeTheme.id} />
+          <ThemeTagline themeId={activeTheme.id} className="text-[12px] leading-snug" />
+        </div>
       </div>
-      <nav className="flex flex-col gap-1 p-3">
+      <div className="mb-6 flex justify-center xl:hidden">
+        <LogoMark size={30} />
+      </div>
+      <nav className="flex w-full flex-col gap-1">
         {items.map((item) => {
           const active =
             pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const Icon = item.icon;
 
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "rounded-xl px-4 py-3 text-sm font-medium transition-colors",
-                "min-h-[var(--touch-target)] flex items-center",
+                "pressable flex min-h-[var(--touch-target)] items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                "justify-center xl:justify-start",
                 active
-                  ? "bg-primary/15 text-primary"
-                  : "text-text-secondary hover:bg-white/5",
+                  ? "bg-primary/12 text-primary"
+                  : "text-text-secondary hover:bg-foreground/[0.04] hover:text-text-primary",
               )}
+              title={item.label}
             >
-              {item.label}
+              <Icon size={22} weight={active ? "fill" : "regular"} aria-hidden />
+              <span className="hidden xl:inline">{item.label}</span>
             </Link>
           );
         })}

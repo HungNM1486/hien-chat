@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { AppHeader } from "@/components/layout/app-header";
+import { ThemeHeroCard } from "@/components/theme/theme-hero-card";
 import { ThemePickerGrid } from "@/components/theme/theme-picker-grid";
 import { useTheme } from "@/components/theme/theme-provider";
 import type { FontSizeOption, ThemeId } from "@hien-nha/theme";
@@ -15,8 +16,15 @@ const fontSizes: { id: FontSizeOption; label: string; desc: string }[] = [
 ];
 
 export default function AppearanceSettingsPage() {
-  const { themeId, fontSize, reduceMotion, setThemeId, setFontSize, setReduceMotion } =
-    useTheme();
+  const {
+    themeId,
+    fontSize,
+    reduceMotion,
+    activeTheme,
+    setThemeId,
+    setFontSize,
+    setReduceMotion,
+  } = useTheme();
   const [saving, setSaving] = useState(false);
 
   const handleTheme = async (id: ThemeId) => {
@@ -29,12 +37,17 @@ export default function AppearanceSettingsPage() {
   };
 
   return (
-    <AppShell header={<AppHeader title="Giao diện" backHref="/settings" />}>
-      <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-4 py-6">
+    <AppShell
+      header={<AppHeader title="Giao diện" subtitle="Theme & cỡ chữ" backHref="/settings" />}
+    >
+      <div className="flex flex-1 flex-col gap-8 overflow-y-auto px-4 py-6">
+        <ThemeHeroCard theme={activeTheme} />
+
         <section>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-text-secondary">
-            Theme
-          </h2>
+          <h2 className="mb-1 font-medium text-text-primary">Theme</h2>
+          <p className="mb-4 text-sm text-text-secondary">
+            Mỗi theme có mascot, pattern và mood riêng — chọn bộ phù hợp với bạn
+          </p>
           <ThemePickerGrid
             value={themeId}
             onChange={handleTheme}
@@ -43,9 +56,8 @@ export default function AppearanceSettingsPage() {
         </section>
 
         <section>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-text-secondary">
-            Cỡ chữ
-          </h2>
+          <h2 className="mb-1 font-medium text-text-primary">Cỡ chữ</h2>
+          <p className="mb-4 text-sm text-text-secondary">Điều chỉnh kích thước chữ toàn app</p>
           <div className="flex flex-col gap-2">
             {fontSizes.map((fs) => (
               <button
@@ -54,21 +66,21 @@ export default function AppearanceSettingsPage() {
                 disabled={saving}
                 onClick={() => setFontSize(fs.id)}
                 className={cn(
-                  "flex min-h-[var(--touch-target)] items-center justify-between rounded-xl border px-4 py-3",
+                  "pressable flex min-h-[var(--touch-target)] items-center justify-between rounded-2xl border px-4 py-3 transition-colors",
                   fontSize === fs.id
-                    ? "border-primary bg-primary/10"
-                    : "border-border",
+                    ? "border-primary/50 bg-primary/10 shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--primary)_15%,transparent)]"
+                    : "border-border/70 bg-surface-elevated/50 hover:bg-foreground/[0.03]",
                 )}
               >
                 <span className="font-medium text-text-primary">{fs.label}</span>
-                <span className="text-sm text-text-secondary">{fs.desc}</span>
+                <span className="font-mono text-sm tabular-nums text-text-secondary">{fs.desc}</span>
               </button>
             ))}
           </div>
         </section>
 
         <section>
-          <label className="flex min-h-[var(--touch-target)] items-center justify-between rounded-xl border border-border px-4 py-3">
+          <label className="settings-card flex min-h-[var(--touch-target)] cursor-pointer items-center justify-between px-4 py-3">
             <div>
               <p className="font-medium text-text-primary">Giảm chuyển động</p>
               <p className="text-sm text-text-secondary">Tắt animation chuyển theme</p>
@@ -78,15 +90,14 @@ export default function AppearanceSettingsPage() {
               checked={reduceMotion}
               disabled={saving}
               onChange={(e) => setReduceMotion(e.target.checked)}
-              className="h-6 w-6 accent-primary"
+              className="h-5 w-5 shrink-0 accent-primary"
             />
           </label>
         </section>
 
         <section>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-text-secondary">
-            Theme tùy chỉnh
-          </h2>
+          <h2 className="mb-1 font-medium text-text-primary">Theme tùy chỉnh</h2>
+          <p className="mb-4 text-sm text-text-secondary">Xuất hoặc nhập cấu hình giao diện</p>
           <div className="flex flex-col gap-2">
             <button
               type="button"
@@ -104,16 +115,16 @@ export default function AppearanceSettingsPage() {
                 a.click();
                 URL.revokeObjectURL(url);
               }}
-              className="rounded-xl border border-border px-4 py-3 text-left text-sm"
+              className="btn-secondary w-full text-sm"
             >
-              Xuất theme (.hien-nha-theme.json)
+              Xuất theme (.json)
             </button>
-            <label className="rounded-xl border border-border px-4 py-3 text-left text-sm">
+            <label className="btn-secondary w-full cursor-pointer text-sm">
               Nhập theme
               <input
                 type="file"
                 accept="application/json,.json"
-                className="mt-2 block w-full text-xs"
+                className="sr-only"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;

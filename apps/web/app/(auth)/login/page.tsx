@@ -39,9 +39,9 @@ export default function LoginPage() {
   });
 
   return (
-    <div className="rounded-2xl border border-border bg-surface p-6 shadow-lg">
-      <div className="mb-8 flex justify-center">
-        <Logo showTagline markSize={52} />
+    <div className="theme-card settings-card bg-surface/95 p-7 backdrop-blur-sm sm:p-8">
+      <div className="mb-8 flex justify-center sm:hidden">
+        <Logo showTagline markSize={44} />
       </div>
 
       <form onSubmit={onSubmit} className="space-y-4">
@@ -52,12 +52,14 @@ export default function LoginPage() {
           <input
             type="email"
             autoComplete="email"
-            className="w-full rounded-xl border border-border bg-background px-4 py-3 text-text-primary outline-none focus:border-primary"
+            className="input-field"
             placeholder="email@example.com"
             {...register("email")}
           />
           {errors.email && (
-            <p className="mt-1 text-sm text-accent">{errors.email.message}</p>
+            <p className="mt-1.5 text-sm text-accent">
+              {String(errors.email.message ?? "")}
+            </p>
           )}
         </div>
 
@@ -68,17 +70,19 @@ export default function LoginPage() {
           <input
             type="password"
             autoComplete="current-password"
-            className="w-full rounded-xl border border-border bg-background px-4 py-3 text-text-primary outline-none focus:border-primary"
+            className="input-field"
             placeholder="••••••••"
             {...register("password")}
           />
           {errors.password && (
-            <p className="mt-1 text-sm text-accent">{errors.password.message}</p>
+            <p className="mt-1.5 text-sm text-accent">
+              {String(errors.password.message ?? "")}
+            </p>
           )}
         </div>
 
         {error && (
-          <p className="rounded-xl bg-accent/10 px-4 py-3 text-sm text-accent">
+          <p className="rounded-2xl border border-accent/20 bg-accent/10 px-4 py-3 text-sm text-accent">
             {error}
           </p>
         )}
@@ -86,7 +90,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex min-h-[var(--touch-target)] w-full items-center justify-center rounded-xl bg-primary font-semibold text-on-primary transition-opacity disabled:opacity-60"
+          className="btn-primary w-full"
         >
           {isSubmitting ? "Đang đăng nhập..." : "Đăng nhập"}
         </button>

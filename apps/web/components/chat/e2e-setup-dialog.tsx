@@ -2,6 +2,7 @@
 
 import { QRCodeSVG } from "qrcode.react";
 import { useState } from "react";
+import { LockSimpleIcon } from "@phosphor-icons/react";
 import {
   exportEncryptedBackup,
   fingerprintPublicKey,
@@ -18,6 +19,7 @@ import { useE2EStore } from "@/stores/e2e-store";
 import { useChatStore } from "@/stores/chat-store";
 import { toast } from "@/stores/toast-store";
 import type { ConversationPublic } from "@hien-nha/shared";
+import { cn } from "@/lib/utils";
 
 interface E2ESetupDialogProps {
   conversation: ConversationPublic | undefined;
@@ -114,10 +116,10 @@ export function E2ESetupDialog({ conversation }: E2ESetupDialogProps) {
 
   if (pending) {
     return (
-      <div className="fixed inset-0 z-[200] flex items-end justify-center bg-black/50 p-4">
-        <div className="w-full max-w-[390px] rounded-2xl bg-surface p-6">
-          <h2 className="mb-2 text-lg font-semibold">Bật mã hóa đầu cuối?</h2>
-          <p className="mb-6 text-sm text-text-secondary">
+      <div className="fixed inset-0 z-[200] flex items-end justify-center bg-black/55 p-4 backdrop-blur-[2px]">
+        <div className="glass-panel w-full max-w-[390px] rounded-[28px] border p-6 shadow-[0_24px_64px_rgb(var(--shadow-color)/0.35)]">
+          <h2 className="mb-2 text-lg font-semibold tracking-tight">Bật mã hóa đầu cuối?</h2>
+          <p className="mb-6 text-sm leading-relaxed text-text-secondary">
             {pending.requesterName} muốn bật E2E cho cuộc trò chuyện này. Chỉ
             hai bạn đọc được tin nhắn mới.
           </p>
@@ -126,7 +128,7 @@ export function E2ESetupDialog({ conversation }: E2ESetupDialogProps) {
               type="button"
               disabled={busy}
               onClick={handleDeclinePending}
-              className="flex-1 rounded-xl border border-border py-3"
+              className="btn-secondary flex-1"
             >
               Từ chối
             </button>
@@ -134,7 +136,7 @@ export function E2ESetupDialog({ conversation }: E2ESetupDialogProps) {
               type="button"
               disabled={busy}
               onClick={handleAcceptPending}
-              className="flex-1 rounded-xl bg-primary py-3 text-on-primary"
+              className="btn-primary flex-1"
             >
               {busy ? "..." : "Chấp nhận"}
             </button>
@@ -147,15 +149,27 @@ export function E2ESetupDialog({ conversation }: E2ESetupDialogProps) {
   if (!conversation || !isDirect) return null;
 
   return (
-    <div className="mt-6 rounded-xl border border-border p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <div>
-          <p className="font-medium">Bảo mật đầu cuối (E2E) 🔒</p>
-          <p className="text-xs text-text-secondary">
-            Chỉ bạn và người nhận đọc được tin nhắn
-          </p>
+    <div className="settings-card p-4">
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <LockSimpleIcon size={20} weight="duotone" aria-hidden />
+          </span>
+          <div>
+            <p className="font-medium text-text-primary">Bảo mật đầu cuối (E2E)</p>
+            <p className="text-xs leading-relaxed text-text-secondary">
+              Chỉ bạn và người nhận đọc được tin nhắn
+            </p>
+          </div>
         </div>
-        <span className="text-sm">{isE2E ? "Bật" : "Tắt"}</span>
+        <span
+          className={cn(
+            "shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium",
+            isE2E ? "bg-primary/15 text-primary" : "bg-background/50 text-text-secondary",
+          )}
+        >
+          {isE2E ? "Bật" : "Tắt"}
+        </span>
       </div>
 
       {!isE2E ? (
@@ -163,7 +177,7 @@ export function E2ESetupDialog({ conversation }: E2ESetupDialogProps) {
           type="button"
           disabled={busy}
           onClick={handleRequestE2E}
-          className="w-full rounded-xl bg-primary py-3 text-on-primary disabled:opacity-50"
+          className="btn-primary w-full"
         >
           Yêu cầu bật E2E
         </button>
@@ -172,23 +186,23 @@ export function E2ESetupDialog({ conversation }: E2ESetupDialogProps) {
           type="button"
           disabled={busy}
           onClick={handleDisableE2E}
-          className="w-full rounded-xl border border-red-500/30 py-3 text-red-400"
+          className="btn-danger w-full"
         >
           Tắt E2E
         </button>
       )}
 
       {isE2E && (
-        <div className="mt-4 space-y-3 border-t border-border pt-4">
+        <div className="mt-4 space-y-4 border-t border-border/60 pt-4">
           <div>
-            <p className="mb-1 text-sm font-medium">Xác minh danh tính</p>
+            <p className="mb-2 text-sm font-medium text-text-primary">Xác minh danh tính</p>
             <button
               type="button"
               onClick={() => {
                 void loadFingerprint();
                 setShowQr((v) => !v);
               }}
-              className="text-sm text-primary"
+              className="text-sm font-medium text-primary hover:underline"
             >
               {showQr ? "Ẩn QR" : "Hiện QR fingerprint"}
             </button>
@@ -198,25 +212,25 @@ export function E2ESetupDialog({ conversation }: E2ESetupDialogProps) {
               </p>
             )}
             {showQr && fingerprint && (
-              <div className="mt-3 flex justify-center">
+              <div className="mt-3 flex justify-center rounded-2xl bg-white p-3">
                 <QRCodeSVG value={fingerprint} size={140} />
               </div>
             )}
           </div>
 
           <div>
-            <p className="mb-2 text-sm font-medium">Backup khóa</p>
+            <p className="mb-2 text-sm font-medium text-text-primary">Backup khóa</p>
             <input
               type="password"
               placeholder="Passphrase backup..."
               value={backupPass}
               onChange={(e) => setBackupPass(e.target.value)}
-              className="mb-2 w-full rounded-xl border border-border bg-background px-4 py-2 text-sm"
+              className="input-field mb-2 text-sm"
             />
             <button
               type="button"
               onClick={handleBackup}
-              className="w-full rounded-xl border border-border py-2 text-sm"
+              className="btn-secondary w-full text-sm"
             >
               Tải backup (.hien-nha-backup)
             </button>

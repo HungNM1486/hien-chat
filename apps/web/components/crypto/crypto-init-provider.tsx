@@ -5,15 +5,15 @@ import { useAuthStore } from "@/stores/auth-store";
 import { initUserCryptoKeys } from "@/lib/crypto-init";
 
 export function CryptoInitProvider({ children }: { children: React.ReactNode }) {
-  const user = useAuthStore((s) => s.user);
+  const userId = useAuthStore((s) => s.user?.id);
   const isInitialized = useAuthStore((s) => s.isInitialized);
 
   useEffect(() => {
-    if (!isInitialized || !user) return;
+    if (!isInitialized || !userId) return;
     void initUserCryptoKeys().catch(() => {
       // IndexedDB / crypto unavailable
     });
-  }, [user, isInitialized]);
+  }, [userId, isInitialized]);
 
   return <>{children}</>;
 }

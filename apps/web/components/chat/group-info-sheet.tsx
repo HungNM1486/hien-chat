@@ -4,6 +4,13 @@ import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import type { ConversationPublic } from "@hien-nha/shared";
 import {
+  CopyIcon,
+  LinkIcon,
+  PlusIcon,
+  SignOutIcon,
+  UserPlusIcon,
+} from "@phosphor-icons/react";
+import {
   addGroupMember,
   createInvite,
   fetchUsers,
@@ -12,6 +19,8 @@ import {
 import { useAuthStore } from "@/stores/auth-store";
 import { useChatStore } from "@/stores/chat-store";
 import { toast } from "@/stores/toast-store";
+import { BottomSheet } from "@/components/ui/bottom-sheet";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { cn } from "@/lib/utils";
 
 interface GroupInfoSheetProps {
@@ -40,21 +49,20 @@ export function GroupInfoSheet({
   const isAdmin = myRole === "admin";
 
   useEffect(() => {
-    if (!open) {
-      setShowAddMember(false);
-      setInviteLink(null);
-    }
-  }, [open]);
-
-  useEffect(() => {
     if (!showAddMember) return;
     fetchUsers().then(setUsers);
   }, [showAddMember]);
 
-  if (!open || !conversation || conversation.type !== "group") return null;
+  if (!conversation || conversation.type !== "group") return null;
 
   const memberIds = new Set(conversation.members.map((m) => m.userId));
   const addableUsers = users.filter((u) => !memberIds.has(u.id));
+
+  const handleClose = () => {
+    setShowAddMember(false);
+    setInviteLink(null);
+    onClose();
+  };
 
   const handleCreateInvite = async () => {
     setLoadingInvite(true);
@@ -91,159 +99,162 @@ export function GroupInfoSheet({
         conversations: state.conversations.filter((c) => c.id !== conversation.id),
       }));
       toast("Đã rời nhóm", "success");
-      onClose();
+      handleClose();
     } catch {
       toast("Không thể rời nhóm", "error");
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col justify-end">
-      <button
-        type="button"
-        className="absolute inset-0 bg-black/50"
-        onClick={onClose}
-        aria-label="Đóng"
-      />
-      <div
-        className="relative max-h-[85vh] overflow-y-auto rounded-t-2xl bg-surface"
-        style={{ paddingBottom: "max(16px, var(--safe-area-bottom))" }}
-      >
-        <div className="sticky top-0 flex items-center justify-between border-b border-border bg-surface px-4 py-4">
-          <h2 className="text-lg font-semibold">Thông tin nhóm</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex min-h-[var(--touch-target)] min-w-[var(--touch-target)] items-center justify-center"
-          >
-            ✕
-          </button>
+    <BottomSheet
+      open={open}
+      onClose={handleClose}
+      title="Thông tin nhóm"
+      subtitle={`${conversation.memberCount ?? conversation.members.length} thành viên`}
+    >
+      <div className="space-y-6 px-5 pb-6">
+        <div className="flex flex-col items-center py-2 text-center">
+          <UserAvatar
+            name={conversation.displayName}
+            avatarUrl={conversation.displayAvatar}
+            size="lg"
+            ring
+            className="mb-3"
+          />
+          <p className="text-xl font-semibold tracking-tight">{conversation.displayName}</p>
         </div>
 
-        <div className="px-4 py-4">
-          <div className="mb-6 text-center">
-            <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-primary/15 text-2xl font-bold text-primary">
-              {conversation.displayName.charAt(0).toUpperCase()}
-            </div>
-            <p className="text-lg font-semibold">{conversation.displayName}</p>
-            <p className="text-sm text-text-secondary">
-              {conversation.memberCount ?? conversation.members.length} thành viên
-            </p>
-          </div>
-
-          <div className="mb-4">
-            <div className="mb-2 flex items-center justify-between">
-              <h3 className="font-medium">Thành viên</h3>
-              {isAdmin && (
-                <button
-                  type="button"
-                  onClick={() => setShowAddMember((v) => !v)}
-                  className="text-sm text-primary"
-                >
-                  {showAddMember ? "Đóng" : "+ Thêm"}
-                </button>
-              )}
-            </div>
-
-            <div className="divide-y divide-border rounded-xl border border-border">
-              {conversation.members.map((member) => (
-                <div
-                  key={member.userId}
-                  className="flex items-center gap-3 px-3 py-3"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 font-semibold text-primary">
-                    {member.user.displayName.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">
-                      {member.user.displayName}
-                      {member.userId === user?.id && " (bạn)"}
-                    </p>
-                    <p className="text-xs text-text-secondary">{member.user.email}</p>
-                  </div>
-                  <span
-                    className={cn(
-                      "rounded-full px-2 py-0.5 text-xs",
-                      member.role === "admin"
-                        ? "bg-primary/15 text-primary"
-                        : "bg-surface text-text-secondary",
-                    )}
-                  >
-                    {member.role === "admin" ? "Admin" : "Thành viên"}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {showAddMember && (
-              <div className="mt-3 max-h-40 overflow-y-auto rounded-xl border border-border">
-                {addableUsers.length === 0 ? (
-                  <p className="px-4 py-4 text-sm text-text-secondary">
-                    Không còn người để thêm
-                  </p>
-                ) : (
-                  addableUsers.map((u) => (
-                    <button
-                      key={u.id}
-                      type="button"
-                      disabled={adding === u.id}
-                      onClick={() => handleAddMember(u.id)}
-                      className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-white/5 disabled:opacity-50"
-                    >
-                      <span className="font-medium">{u.displayName}</span>
-                      <span className="text-sm text-text-secondary">{u.email}</span>
-                    </button>
-                  ))
+        <section>
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="font-medium text-text-primary">Thành viên</h3>
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => setShowAddMember((v) => !v)}
+                className="pressable inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/10"
+              >
+                {showAddMember ? "Đóng" : (
+                  <>
+                    <PlusIcon size={14} weight="bold" aria-hidden />
+                    Thêm
+                  </>
                 )}
-              </div>
+              </button>
             )}
           </div>
 
-          {isAdmin && (
-            <div className="mb-4 rounded-xl border border-border p-4">
-              <h3 className="mb-2 font-medium">Mời thành viên</h3>
-              <p className="mb-3 text-sm text-text-secondary">
-                Link hết hạn sau 24h, tối đa 10 lượt dùng
-              </p>
-              {!inviteLink ? (
-                <button
-                  type="button"
-                  disabled={loadingInvite}
-                  onClick={handleCreateInvite}
-                  className="w-full rounded-xl bg-primary py-3 font-medium text-on-primary disabled:opacity-50"
-                >
-                  {loadingInvite ? "Đang tạo..." : "Tạo link & QR"}
-                </button>
-              ) : (
-                <div className="flex flex-col items-center gap-3">
-                  <QRCodeSVG value={inviteLink} size={160} />
-                  <p className="break-all text-center text-xs text-text-secondary">
-                    {inviteLink}
+          <div className="settings-card divide-y divide-border/60 overflow-hidden">
+            {conversation.members.map((member) => (
+              <div
+                key={member.userId}
+                className="flex items-center gap-3 px-3 py-3"
+              >
+                <UserAvatar
+                  name={member.user.displayName}
+                  avatarUrl={member.user.avatarUrl}
+                  size="sm"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium text-text-primary">
+                    {member.user.displayName}
+                    {member.userId === user?.id && (
+                      <span className="ml-1 text-text-secondary">(bạn)</span>
+                    )}
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      void navigator.clipboard.writeText(inviteLink);
-                      toast("Đã copy link", "success");
-                    }}
-                    className="rounded-xl border border-border px-4 py-2 text-sm"
-                  >
-                    Copy link
-                  </button>
+                  <p className="truncate text-xs text-text-secondary">{member.user.email}</p>
                 </div>
+                <span
+                  className={cn(
+                    "shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-medium",
+                    member.role === "admin"
+                      ? "bg-primary/15 text-primary"
+                      : "bg-background/50 text-text-secondary",
+                  )}
+                >
+                  {member.role === "admin" ? "Admin" : "Thành viên"}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {showAddMember && (
+            <div className="settings-card mt-3 max-h-44 overflow-y-auto">
+              {addableUsers.length === 0 ? (
+                <p className="px-4 py-4 text-sm text-text-secondary">
+                  Không còn người để thêm
+                </p>
+              ) : (
+                addableUsers.map((u) => (
+                  <button
+                    key={u.id}
+                    type="button"
+                    disabled={adding === u.id}
+                    onClick={() => handleAddMember(u.id)}
+                    className="pressable flex w-full items-center gap-3 border-b border-border/40 px-4 py-3 text-left last:border-b-0 hover:bg-foreground/[0.03] disabled:opacity-50"
+                  >
+                    <UserPlusIcon size={18} className="text-primary" aria-hidden />
+                    <div className="min-w-0">
+                      <span className="block font-medium text-text-primary">{u.displayName}</span>
+                      <span className="block truncate text-sm text-text-secondary">{u.email}</span>
+                    </div>
+                  </button>
+                ))
               )}
             </div>
           )}
+        </section>
 
-          <button
-            type="button"
-            onClick={handleLeave}
-            className="w-full rounded-xl border border-red-500/30 py-3 text-red-400"
-          >
-            Rời nhóm
-          </button>
-        </div>
+        {isAdmin && (
+          <section className="settings-card p-4">
+            <div className="mb-2 flex items-center gap-2">
+              <LinkIcon size={18} className="text-primary" aria-hidden />
+              <h3 className="font-medium text-text-primary">Mời thành viên</h3>
+            </div>
+            <p className="mb-4 text-sm text-text-secondary">
+              Link hết hạn sau 24 giờ, tối đa 10 lượt dùng
+            </p>
+            {!inviteLink ? (
+              <button
+                type="button"
+                disabled={loadingInvite}
+                onClick={handleCreateInvite}
+                className="btn-primary w-full"
+              >
+                {loadingInvite ? "Đang tạo..." : "Tạo link & QR"}
+              </button>
+            ) : (
+              <div className="flex flex-col items-center gap-4">
+                <div className="rounded-2xl bg-white p-3 shadow-sm">
+                  <QRCodeSVG value={inviteLink} size={160} />
+                </div>
+                <p className="break-all text-center font-mono text-[11px] text-text-secondary">
+                  {inviteLink}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void navigator.clipboard.writeText(inviteLink);
+                    toast("Đã copy link", "success");
+                  }}
+                  className="btn-secondary inline-flex gap-2 text-sm"
+                >
+                  <CopyIcon size={16} aria-hidden />
+                  Copy link
+                </button>
+              </div>
+            )}
+          </section>
+        )}
+
+        <button
+          type="button"
+          onClick={handleLeave}
+          className="btn-danger w-full gap-2"
+        >
+          <SignOutIcon size={18} aria-hidden />
+          Rời nhóm
+        </button>
       </div>
-    </div>
+    </BottomSheet>
   );
 }
