@@ -1,0 +1,50 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: hiennha-postgres
+    environment:
+      POSTGRES_USER: hiennha
+      POSTGRES_PASSWORD: hiennha
+      POSTGRES_DB: hiennha
+    ports:
+      - "5432:5432"
+    volumes:
+      - hiennha_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hiennha -d hiennha"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: hiennha-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: hiennha-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: hiennha
+      MINIO_ROOT_PASSWORD: hiennhasecret
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - hiennha_minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  hiennha_pg_data:
+  hiennha_minio_data:

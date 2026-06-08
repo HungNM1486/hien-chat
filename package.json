@@ -1,0 +1,22 @@
+{
+  "name": "hien-nha",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "db:up": "docker compose -f docker/docker-compose.dev.yml up -d",
+    "db:down": "docker compose -f docker/docker-compose.dev.yml down",
+    "db:migrate": "pnpm --filter @hien-nha/server db:migrate",
+    "db:seed": "pnpm --filter @hien-nha/server db:seed",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.4",
+    "typescript": "^5.8.3"
+  },
+  "packageManager": "pnpm@10.12.1",
+  "engines": {
+    "node": ">=20"
+  }
+}

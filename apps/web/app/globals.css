@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0d1117;
+  --foreground: #c9d1d9;
+  --surface: #161b22;
+  --primary: #58a6ff;
+  --on-primary: #ffffff;
+  --bubble-sent: #238636;
+  --bubble-received: #21262d;
+  --text-primary: #c9d1d9;
+  --text-secondary: #8b949e;
+  --accent: #f78166;
+  --border: #30363d;
+
+  --header-height: 56px;
+  --composer-min-height: 52px;
+  --bottom-nav-height: 64px;
+  --touch-target: 44px;
+  --radius-bubble: 18px;
+  --font-size-base: 16px;
+  --font-size-large: 20px;
+
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --keyboard-offset: 0px;
+
+  --theme-transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-bubble-sent: var(--bubble-sent);
+  --color-bubble-received: var(--bubble-received);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-accent: var(--accent);
+  --color-border: var(--border);
+  --font-sans: var(--font-geist-sans);
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  touch-action: manipulation;
+}
+
+html.theme-no-transition *,
+html.theme-no-transition {
+  transition: none !important;
+}
+
+html:not(.reduce-motion) body,
+html:not(.reduce-motion) [data-theme] {
+  transition: var(--theme-transition);
+}
+
+html.reduce-motion *,
+html.reduce-motion {
+  animation: none !important;
+  transition: none !important;
+}
+
+body {
+  background: var(--background);
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  overscroll-behavior: none;
+}
+
+input,
+textarea,
+select {
+  font-size: max(16px, var(--font-size-base));
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(24px);
+    opacity: 0.6;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.page-slide-in {
+  animation: slide-in-right 0.22s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-slide-in {
+    animation: none;
+  }
+}
