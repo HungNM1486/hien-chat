@@ -4,14 +4,32 @@ import { useEffect, useRef } from "react";
 import type { WsClientEvent, WsServerEvent } from "@hien-nha/shared";
 import { VoiceCallEngine } from "@/lib/voice-call-engine";
 import { useCallStore } from "@/stores/call-store";
+import { notifyIncomingCall } from "@/lib/in-app-notifications";
+import { useNotificationBannerStore } from "@/stores/notification-banner-store";
+import { startCallRing, stopCallRing } from "@/lib/notification-sounds";
+import { useNotificationStore } from "@/stores/notification-store";
 import { toast } from "@/stores/toast-store";
 
 type WsSend = (event: WsClientEvent) => void;
 
 export function useCallManager(send: WsSend) {
   const engineRef = useRef<VoiceCallEngine | null>(null);
+  const stopRingRef = useRef<(() => void) | null>(null);
   const sendRef = useRef(send);
   sendRef.current = send;
+
+  const stopRing = () => {
+    stopRingRef.current?.();
+    stopRingRef.current = null;
+    stopCallRing();
+  };
+
+  const dismissCallBanner = () => {
+    const banner = useNotificationBannerStore.getState().banner;
+    if (banner?.kind === "call") {
+      useNotificationBannerStore.getState().dismiss();
+    }
+  };
 
   useEffect(() => {
     const engine = new VoiceCallEngine();
@@ -48,6 +66,8 @@ export function useCallManager(send: WsSend) {
   }, []);
 
   const hangup = (message?: string) => {
+    stopRing();
+    dismissCallBanner();
     const { conversationId, status } = useCallStore.getState();
     if (conversationId && status !== "idle" && status !== "ended") {
       sendRef.current({ type: "call:hangup", conversationId });
@@ -91,6 +111,8 @@ export function useCallManager(send: WsSend) {
     const { conversationId, status } = useCallStore.getState();
     if (!conversationId || status !== "incoming") return;
 
+    stopRing();
+    dismissCallBanner();
     try {
       useCallStore.getState().setConnecting();
       await engineRef.current?.prepare();
@@ -104,6 +126,8 @@ export function useCallManager(send: WsSend) {
   const rejectCall = () => {
     const { conversationId, status } = useCallStore.getState();
     if (!conversationId || status !== "incoming") return;
+    stopRing();
+    dismissCallBanner();
     sendRef.current({ type: "call:reject", conversationId });
     engineRef.current?.destroy();
     useCallStore.getState().reset();
@@ -132,6 +156,11 @@ export function useCallManager(send: WsSend) {
         useCallStore
           .getState()
           .setIncoming(data.conversationId, data.callerId, data.callerName);
+        notifyIncomingCall(data.callerName, data.conversationId);
+        if (useNotificationStore.getState().callRing) {
+          stopRing();
+          stopRingRef.current = startCallRing();
+        }
         break;
 
       case "call:accepted":

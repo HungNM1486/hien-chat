@@ -4,8 +4,8 @@ import "./globals.css";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { CryptoInitProvider } from "@/components/crypto/crypto-init-provider";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { IncomingBanner } from "@/components/notifications/incoming-banner";
 import { ToastContainer } from "@/components/ui/toast-container";
-import { SwKillScript } from "@/components/pwa/sw-kill-script";
 import { E2EGlobalDialog } from "@/components/chat/e2e-global-dialog";
 
 const nunito = Nunito({
@@ -54,14 +54,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi" className={`${nunito.variable} ${jetbrainsMono.variable} h-full`}>
-      <head>
-        <SwKillScript />
-      </head>
       <body className="min-h-full bg-background text-text-primary antialiased">
         <AuthProvider>
           <CryptoInitProvider>
             <ThemeProvider>
               {children}
+              <IncomingBanner />
               <ToastContainer />
               <E2EGlobalDialog />
             </ThemeProvider>

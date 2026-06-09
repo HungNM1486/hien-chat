@@ -18,7 +18,7 @@ export function ToastContainer() {
 
   return (
     <div
-      className="fixed inset-x-4 z-[200] flex flex-col gap-2 pointer-events-none"
+      className="fixed inset-x-4 z-[450] flex flex-col gap-2 pointer-events-none"
       style={{ bottom: "calc(var(--bottom-nav-height) + var(--safe-area-bottom) + 16px)" }}
     >
       {toasts.map((t) => {
@@ -27,7 +27,7 @@ export function ToastContainer() {
           <div
             key={t.id}
             className={cn(
-              "glass-panel pointer-events-auto flex items-center gap-3 rounded-2xl border px-4 py-3 shadow-[0_8px_32px_rgb(var(--shadow-color)/0.25)] animate-fade-up",
+              "pointer-events-auto flex items-center gap-3 rounded-2xl border bg-surface px-4 py-3 opacity-100 shadow-[0_8px_32px_rgb(var(--shadow-color)/0.3)] animate-fade-up",
               t.type === "error" && "border-accent/30",
               t.type === "success" && "border-primary/30",
               t.type === "info" && "border-border/60",

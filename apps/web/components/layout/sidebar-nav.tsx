@@ -8,6 +8,7 @@ import { LogoMark } from "@/components/brand/logo-mark";
 import { ThemeBadge } from "@/components/theme/theme-badge";
 import { ThemeTagline } from "@/components/theme/theme-tagline";
 import { useTheme } from "@/components/theme/theme-provider";
+import { useChatStore } from "@/stores/chat-store";
 import { cn } from "@/lib/utils";
 
 const items = [
@@ -18,6 +19,9 @@ const items = [
 export function SidebarNav() {
   const pathname = usePathname();
   const { activeTheme } = useTheme();
+  const unreadTotal = useChatStore((s) =>
+    s.conversations.reduce((sum, c) => sum + c.unreadCount, 0),
+  );
 
   return (
     <aside className="hidden w-[72px] shrink-0 flex-col items-center border-r border-border/50 bg-surface py-4 md:flex xl:w-56 xl:items-stretch xl:px-3">
@@ -50,7 +54,14 @@ export function SidebarNav() {
               )}
               title={item.label}
             >
-              <Icon size={22} weight={active ? "fill" : "regular"} aria-hidden />
+              <span className="relative shrink-0">
+                <Icon size={22} weight={active ? "fill" : "regular"} aria-hidden />
+                {item.href === "/chats" && unreadTotal > 0 && (
+                  <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-0.5 text-[9px] font-bold tabular-nums text-on-primary">
+                    {unreadTotal > 99 ? "99+" : unreadTotal}
+                  </span>
+                )}
+              </span>
               <span className="hidden xl:inline">{item.label}</span>
             </Link>
           );

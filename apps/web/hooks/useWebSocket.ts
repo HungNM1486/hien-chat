@@ -8,6 +8,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useChatStore } from "@/stores/chat-store";
 import { useE2EStore } from "@/stores/e2e-store";
 import { dispatchCallServerEvent } from "@/lib/call-signaling-bridge";
+import { notifyIncomingMessage } from "@/lib/in-app-notifications";
 
 const MAX_BACKOFF = 30000;
 
@@ -71,9 +72,20 @@ export function useWebSocket() {
       const setPendingE2E = useE2EStore.getState().setPendingRequest;
 
       switch (data.type) {
-        case "message:new":
+        case "message:new": {
           addMessage(data.message);
+          const { activeConversationId } = useChatStore.getState();
+          const conv = conversations.find(
+            (c) => c.id === data.message.conversationId,
+          );
+          notifyIncomingMessage({
+            message: data.message,
+            conversationName: conv?.displayName,
+            currentUserId: userId,
+            activeConversationId,
+          });
           break;
+        }
         case "message:edit":
           updateMessage(data.message);
           break;

@@ -46,19 +46,7 @@ export async function disableE2E(conversationId: string) {
   );
 }
 
-export async function subscribePush(
-  subscription: PushSubscriptionJSON,
-): Promise<void> {
-  await apiFetch("/push/subscribe", {
-    method: "POST",
-    body: JSON.stringify(subscription),
-  });
-}
-
-export async function fetchVapidPublicKey(): Promise<string | null> {
-  const data = await apiFetch<{ publicKey: string }>("/push/vapid-public-key");
-  return data.publicKey || null;
-}
+export { subscribePush, fetchVapidPublicKey } from "./push-api";
 
 export async function pinMessage(
   conversationId: string,

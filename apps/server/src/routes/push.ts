@@ -46,6 +46,11 @@ export async function pushRoutes(app: FastifyInstance) {
           p256dh: keys.p256dh,
           auth: keys.auth,
         });
+      } else if (existing[0]!.userId !== userId) {
+        await db
+          .update(pushSubscriptions)
+          .set({ userId, p256dh: keys.p256dh, auth: keys.auth })
+          .where(eq(pushSubscriptions.endpoint, endpoint));
       }
 
       return { ok: true };

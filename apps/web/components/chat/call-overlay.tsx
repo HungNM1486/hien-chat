@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   MicrophoneIcon,
   MicrophoneSlashIcon,
@@ -52,6 +53,9 @@ export function CallOverlay({
     }
   }, [getEngine, remoteAudioReady, status]);
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   if (status === "idle") return null;
 
   const statusLabel =
@@ -65,8 +69,8 @@ export function CallOverlay({
             ? "Đang gọi"
             : endMessage ?? "Cuộc gọi đã kết thúc";
 
-  return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-foreground/40 p-4 backdrop-blur-sm">
+  const overlay = (
+    <div className="fixed inset-0 z-[600] flex items-center justify-center bg-foreground/50 p-4 backdrop-blur-sm">
       <div
         className={cn(
           "w-full max-w-sm rounded-3xl border border-border/60 bg-surface p-6 shadow-[0_24px_64px_rgb(var(--shadow-color)/0.2)]",
@@ -164,6 +168,9 @@ export function CallOverlay({
       </div>
     </div>
   );
+
+  if (!mounted) return null;
+  return createPortal(overlay, document.body);
 }
 
 function Duration({ startedAt }: { startedAt: number }) {

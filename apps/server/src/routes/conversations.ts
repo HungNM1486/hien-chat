@@ -32,6 +32,7 @@ import {
   enrichSingleMessage,
   getMemberRole,
 } from "../services/messages.js";
+import { notifyNewMessage } from "../services/push.js";
 import { wsHub } from "../ws/handler.js";
 
 const EDIT_WINDOW_MS = 15 * 60 * 1000;
@@ -377,6 +378,9 @@ export async function conversationRoutes(app: FastifyInstance) {
           type: "message:new",
           message: messagePublic,
         });
+        if (memberId !== userId) {
+          void notifyNewMessage(memberId, id, messagePublic);
+        }
       }
 
       return reply.code(201).send({ message: messagePublic });

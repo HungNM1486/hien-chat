@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChatCircleDotsIcon, GearSixIcon } from "@phosphor-icons/react";
+import { useChatStore } from "@/stores/chat-store";
 import { cn } from "@/lib/utils";
 
 const items = [
@@ -12,6 +13,9 @@ const items = [
 
 export function BottomNav() {
   const pathname = usePathname();
+  const unreadTotal = useChatStore((s) =>
+    s.conversations.reduce((sum, c) => sum + c.unreadCount, 0),
+  );
 
   return (
     <nav
@@ -37,7 +41,7 @@ export function BottomNav() {
             >
               <div
                 className={cn(
-                  "flex h-9 w-14 items-center justify-center rounded-full transition-colors",
+                  "relative flex h-9 w-14 items-center justify-center rounded-full transition-colors",
                   active && "bg-primary/12",
                 )}
               >
@@ -46,6 +50,11 @@ export function BottomNav() {
                   weight={active ? "fill" : "regular"}
                   aria-hidden
                 />
+                {item.href === "/chats" && unreadTotal > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold tabular-nums text-on-primary">
+                    {unreadTotal > 99 ? "99+" : unreadTotal}
+                  </span>
+                )}
               </div>
               <span>{item.label}</span>
             </Link>

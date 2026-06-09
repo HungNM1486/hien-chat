@@ -6,10 +6,10 @@
 # Chuẩn bị:
 #   1. cp .env.production.example .env && điền secrets
 #   2. docker network create legal-shared-network   # hoặc tên trong SHARED_NETWORK_NAME
-#   3. docker compose -f docker/docker-compose.prod.yml up -d --build
+#   3. docker compose --env-file .env -f docker/docker-compose.prod.yml up -d --build
 #
 # Migrate DB (lần đầu hoặc sau upgrade):
-#   docker compose -f docker/docker-compose.prod.yml run --rm migrate
+#   docker compose --env-file .env -f docker/docker-compose.prod.yml run --rm migrate
 #
 # NEXT_PUBLIC_API_URL được bake vào web lúc build — đổi domain phải rebuild web.
 

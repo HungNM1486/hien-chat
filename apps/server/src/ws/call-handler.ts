@@ -6,6 +6,7 @@ import {
   getConversationMemberIds,
   isConversationMember,
 } from "../services/conversations.js";
+import { notifyIncomingCall } from "../services/push.js";
 import { wsHub } from "./hub.js";
 import {
   endCall,
@@ -119,6 +120,7 @@ export async function handleCallEvent(
         callerId: userId,
         callerName,
       });
+      void notifyIncomingCall(peerId, event.conversationId, callerName);
       break;
     }
 
