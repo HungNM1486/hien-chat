@@ -12,6 +12,7 @@ import {
 } from "@phosphor-icons/react";
 import { AppShell } from "@/components/layout/app-shell";
 import { AppHeader } from "@/components/layout/app-header";
+import { SettingsScroll } from "@/components/layout/settings-scroll";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { ThemeBadge } from "@/components/theme/theme-badge";
 import { ThemeTagline } from "@/components/theme/theme-tagline";
@@ -39,8 +40,8 @@ export default function SettingsPage() {
 
   return (
     <AppShell header={<AppHeader title="Cài đặt" subtitle="Tài khoản & ứng dụng" />}>
-      <div className="flex flex-1 flex-col overflow-y-auto">
-        <div className="theme-pattern-surface mx-4 mt-4 overflow-hidden rounded-[var(--radius-card,22px)] border border-border/70 bg-surface/80 shadow-[0_14px_38px_rgb(var(--shadow-color)/0.08)] md:mx-6">
+      <SettingsScroll>
+        <div className="theme-pattern-surface mx-0 mt-4 overflow-hidden rounded-[var(--radius-card,22px)] border border-border/70 bg-surface/80 shadow-[0_14px_38px_rgb(var(--shadow-color)/0.08)] lg:mt-6">
           <div className="theme-accent-bar" aria-hidden />
           <div className="relative z-10 flex items-center gap-4 px-4 py-5">
             <UserAvatar
@@ -62,7 +63,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <nav className="flex flex-col gap-2 px-3 py-4 md:px-5">
+        <nav className="flex flex-col gap-2 py-4 lg:grid lg:grid-cols-2 lg:gap-3 lg:py-6">
           {menuItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -81,17 +82,17 @@ export default function SettingsPage() {
           })}
         </nav>
 
-        <div className="mt-auto border-t border-border/60 p-4 md:px-6">
+        <div className="mt-auto border-t border-border/60 p-4 lg:px-0 lg:pb-6 lg:pt-8">
           <button
             type="button"
             onClick={handleLogout}
-            className={cn("btn-danger w-full gap-2")}
+            className={cn("btn-danger w-full gap-2 lg:max-w-sm")}
           >
             <SignOutIcon size={18} aria-hidden />
             Đăng xuất
           </button>
         </div>
-      </div>
+      </SettingsScroll>
     </AppShell>
   );
 }

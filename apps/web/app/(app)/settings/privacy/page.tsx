@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { AppHeader } from "@/components/layout/app-header";
+import { SettingsScroll } from "@/components/layout/settings-scroll";
 import { updateProfile } from "@/lib/user-api";
 import { useAuthStore } from "@/stores/auth-store";
 import { toast } from "@/stores/toast-store";
@@ -34,7 +35,8 @@ export default function PrivacySettingsPage() {
     <AppShell
       header={<AppHeader title="Quyền riêng tư" subtitle="Kiểm soát thông tin hiển thị" backHref="/settings" />}
     >
-      <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-4 py-6">
+      <SettingsScroll narrow className="py-6">
+        <div className="flex flex-col gap-3 px-4 lg:px-0">
         <ToggleRow
           label="Ẩn trạng thái hoạt động"
           desc="Người khác không thấy bạn online"
@@ -49,7 +51,8 @@ export default function PrivacySettingsPage() {
           disabled={saving}
           onChange={(v) => updateSetting("hideReadReceipts", v)}
         />
-      </div>
+        </div>
+      </SettingsScroll>
     </AppShell>
   );
 }

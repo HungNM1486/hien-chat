@@ -24,15 +24,15 @@ export function SidebarNav() {
   );
 
   return (
-    <aside className="hidden w-[72px] shrink-0 flex-col items-center border-r border-border/50 bg-surface py-4 md:flex xl:w-56 xl:items-stretch xl:px-3">
-      <div className="relative z-10 mb-4 hidden w-full px-2 xl:block">
+    <aside className="hidden w-[72px] shrink-0 flex-col items-center border-r border-border/50 bg-surface py-4 md:flex lg:w-52 lg:items-stretch lg:px-3 xl:w-56">
+      <div className="relative z-10 mb-4 hidden w-full px-2 lg:block">
         <Logo markSize={32} />
         <div className="mt-3 space-y-2">
           <ThemeBadge themeId={activeTheme.id} />
           <ThemeTagline themeId={activeTheme.id} className="text-[12px] leading-snug" />
         </div>
       </div>
-      <div className="mb-6 flex justify-center xl:hidden">
+      <div className="mb-6 flex justify-center lg:hidden">
         <LogoMark size={30} />
       </div>
       <nav className="flex w-full flex-col gap-1">
@@ -47,7 +47,7 @@ export function SidebarNav() {
               href={item.href}
               className={cn(
                 "pressable flex min-h-[var(--touch-target)] items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-                "justify-center xl:justify-start",
+                "justify-center lg:justify-start",
                 active
                   ? "bg-primary/12 text-primary"
                   : "text-text-secondary hover:bg-foreground/[0.04] hover:text-text-primary",
@@ -62,7 +62,7 @@ export function SidebarNav() {
                   </span>
                 )}
               </span>
-              <span className="hidden xl:inline">{item.label}</span>
+              <span className="hidden lg:inline">{item.label}</span>
             </Link>
           );
         })}

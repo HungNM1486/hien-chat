@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   DotsThreeVerticalIcon,
@@ -24,6 +24,7 @@ import { pinMessage } from "@/lib/e2e-api";
 import { toast } from "@/stores/toast-store";
 import { useCall } from "@/contexts/call-context";
 import { useCallStore } from "@/stores/call-store";
+import { useIsDesktopSplit } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 
 export default function ChatPage({
@@ -37,15 +38,7 @@ export default function ChatPage({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [groupInfoOpen, setGroupInfoOpen] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
-  const [isDesktop, setIsDesktop] = useState(false);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 1280px)");
-    setIsDesktop(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
+  const isDesktopSplit = useIsDesktopSplit();
 
   const {
     conversation,
@@ -88,7 +81,7 @@ export default function ChatPage({
   if (isLoading || !user) {
     return (
       <div className="chat-column flex flex-col page-slide-in">
-        <AppHeader title="..." backHref={isDesktop ? undefined : "/chats"} />
+        <AppHeader title="..." backHref={isDesktopSplit ? undefined : "/chats"} />
         <div className="chat-scroll-region chat-thread-bg flex flex-col gap-2.5 p-4">
           {[1, 2, 3, 4, 5].map((i) => (
             <div
@@ -110,7 +103,7 @@ export default function ChatPage({
         <AppHeader
           title={conversation?.displayName ?? "Chat"}
           subtitle={headerSubtitle}
-          backHref={isDesktop ? undefined : "/chats"}
+          backHref={isDesktopSplit ? undefined : "/chats"}
           onTitleClick={isGroup ? () => setGroupInfoOpen(true) : undefined}
           right={
             <div className="flex items-center">

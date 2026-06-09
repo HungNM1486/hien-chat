@@ -48,14 +48,14 @@ export function ChatListPanel({ activeId, className }: ChatListPanelProps) {
     <>
       <div
         className={cn(
-          "chat-column flex w-full flex-col xl:border-r xl:border-border/60",
+          "chat-column chat-list-panel flex w-full flex-col lg:border-r lg:border-border/60",
           className,
         )}
       >
-        <header className="chat-column-header px-4 pb-3 pt-[calc(var(--safe-area-top)+12px)] lg:px-5">
+        <header className="chat-column-header px-4 pb-3 pt-[calc(var(--safe-area-top)+12px)] lg:px-5 lg:pt-4">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <h1 className="truncate text-[22px] font-bold tracking-tight text-text-primary">
+              <h1 className="truncate text-[22px] font-bold tracking-tight text-text-primary lg:text-2xl">
                 Tin nhắn
               </h1>
               {identity && (

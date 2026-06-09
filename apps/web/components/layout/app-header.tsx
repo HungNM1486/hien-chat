@@ -29,8 +29,8 @@ export function AppHeader({
       )}
       style={{ paddingTop: "var(--safe-area-top)" }}
     >
-      <div className="theme-accent-bar shrink-0 md:hidden" aria-hidden />
-      <div className="flex h-[var(--header-height)] items-center gap-1 px-3 md:px-4">
+      <div className="theme-accent-bar shrink-0 lg:hidden" aria-hidden />
+      <div className="flex h-[var(--header-height)] items-center gap-1 px-3 lg:gap-2 lg:px-5">
         {backHref && (
           <Link
             href={backHref}
@@ -56,7 +56,7 @@ export function AppHeader({
           role={onTitleClick ? "button" : undefined}
           tabIndex={onTitleClick ? 0 : undefined}
         >
-          <h1 className="truncate text-[17px] font-semibold tracking-tight text-text-primary">
+          <h1 className="truncate text-[17px] font-semibold tracking-tight text-text-primary lg:text-[18px]">
             {title}
           </h1>
           {subtitle && (

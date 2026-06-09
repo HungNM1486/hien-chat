@@ -9,6 +9,7 @@ import {
 } from "@phosphor-icons/react";
 import { AppShell } from "@/components/layout/app-shell";
 import { AppHeader } from "@/components/layout/app-header";
+import { SettingsScroll } from "@/components/layout/settings-scroll";
 import { useNotificationStore } from "@/stores/notification-store";
 import {
   ensurePushSubscription,
@@ -85,7 +86,8 @@ export default function NotificationsSettingsPage() {
         />
       }
     >
-      <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-4 py-6">
+      <SettingsScroll narrow className="py-6">
+        <div className="flex flex-col gap-3 px-4 lg:px-0">
         <section className="settings-card overflow-hidden">
           <div className="border-b border-border/40 px-4 py-3">
             <p className="text-xs font-semibold uppercase tracking-wider text-text-secondary">
@@ -195,7 +197,8 @@ export default function NotificationsSettingsPage() {
             </>
           )}
         </section>
-      </div>
+        </div>
+      </SettingsScroll>
     </AppShell>
   );
 }

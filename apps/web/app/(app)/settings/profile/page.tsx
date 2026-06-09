@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { CameraIcon } from "@phosphor-icons/react";
 import { AppShell } from "@/components/layout/app-shell";
 import { AppHeader } from "@/components/layout/app-header";
+import { SettingsScroll } from "@/components/layout/settings-scroll";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { updateProfile, uploadAvatar } from "@/lib/user-api";
 import { useAuthStore } from "@/stores/auth-store";
@@ -46,7 +47,8 @@ export default function ProfileSettingsPage() {
 
   return (
     <AppShell header={<AppHeader title="Hồ sơ" subtitle="Thông tin cá nhân" backHref="/settings" />}>
-      <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-4 py-6">
+      <SettingsScroll narrow className="py-6">
+        <div className="flex flex-col gap-6 px-4 lg:px-0">
         <div className="flex flex-col items-center gap-3">
           <button
             type="button"
@@ -111,7 +113,8 @@ export default function ProfileSettingsPage() {
         >
           {saving ? "Đang lưu..." : "Lưu thay đổi"}
         </button>
-      </div>
+        </div>
+      </SettingsScroll>
     </AppShell>
   );
 }

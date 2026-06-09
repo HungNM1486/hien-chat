@@ -22,6 +22,9 @@
   --composer-min-height: 46px;
   --bottom-nav-height: 68px;
   --touch-target: 44px;
+  --chat-list-width: 100%;
+  --shell-max-width: 100%;
+  --message-thread-max: 100%;
   --radius-bubble: 20px;
   --radius-bubble-tail: 5px;
   --radius-card: 20px;
@@ -395,6 +398,68 @@ html:not([data-theme]) {
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--surface) 40%, transparent), transparent 30%),
     var(--background);
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --header-height: 56px;
+    --chat-list-width: 320px;
+    --shell-max-width: 1320px;
+    --message-thread-max: 720px;
+  }
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --chat-list-width: 360px;
+    --shell-max-width: 1400px;
+    --message-thread-max: 780px;
+  }
+}
+
+@media (min-width: 1536px) {
+  :root {
+    --chat-list-width: 380px;
+    --shell-max-width: 1440px;
+    --message-thread-max: 820px;
+  }
+}
+
+.desktop-thread-stack {
+  width: 100%;
+  max-width: var(--message-thread-max);
+  margin-inline: auto;
+}
+
+.chat-list-panel {
+  width: var(--chat-list-width);
+}
+
+.conversation-item-active-bar {
+  position: relative;
+}
+
+@media (min-width: 1024px) {
+  .conversation-item-active-bar[data-active="true"]::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    height: 56%;
+    width: 3px;
+    transform: translateY(-50%);
+    border-radius: 0 4px 4px 0;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--primary) 70%, transparent),
+      var(--primary),
+      color-mix(in srgb, var(--primary) 70%, transparent)
+    );
+  }
+
+  .chat-column-header-desktop {
+    padding-top: 0.875rem;
+  }
 }
 
 /* ── Chat layout: fixed frame, scroll only inside list/thread ── */

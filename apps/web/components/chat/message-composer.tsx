@@ -99,7 +99,7 @@ export function MessageComposer({
 
   return (
     <div
-      className="chat-column-footer glass-panel border-t px-3 pt-2 md:px-4"
+      className="chat-column-footer glass-panel border-t px-3 pt-2 lg:px-6 lg:pt-3"
       style={{
         paddingBottom:
           "max(10px, calc(var(--safe-area-bottom) + var(--keyboard-offset, 0px)))",
@@ -129,7 +129,8 @@ export function MessageComposer({
         </div>
       )}
 
-      <div className="flex w-full max-w-full items-end gap-1 pb-1">
+      <div className="desktop-thread-stack px-0 pb-1 lg:px-2">
+        <div className="flex w-full max-w-full items-end gap-1">
         <input
           ref={fileInputRef}
           type="file"
@@ -191,6 +192,7 @@ export function MessageComposer({
             canSend ? "scale-100 opacity-100" : "scale-90 opacity-35",
           )}
         />
+        </div>
       </div>
     </div>
   );

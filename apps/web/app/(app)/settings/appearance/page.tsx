@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { AppHeader } from "@/components/layout/app-header";
+import { SettingsScroll } from "@/components/layout/settings-scroll";
 import { ThemeHeroCard } from "@/components/theme/theme-hero-card";
 import { ThemePickerGrid } from "@/components/theme/theme-picker-grid";
 import { useTheme } from "@/components/theme/theme-provider";
@@ -40,13 +41,14 @@ export default function AppearanceSettingsPage() {
     <AppShell
       header={<AppHeader title="Giao diện" subtitle="Theme & cỡ chữ" backHref="/settings" />}
     >
-      <div className="flex flex-1 flex-col gap-8 overflow-y-auto px-4 py-6">
+      <SettingsScroll className="py-6">
+        <div className="flex flex-col gap-8 px-4 lg:px-0">
         <ThemeHeroCard theme={activeTheme} />
 
         <section>
           <h2 className="mb-1 font-medium text-text-primary">Theme</h2>
           <p className="mb-4 text-sm text-text-secondary">
-            Mỗi theme có mascot, pattern và mood riêng — chọn bộ phù hợp với bạn
+            Mỗi theme có mascot, pattern và mood riêng. Chọn bộ phù hợp với bạn
           </p>
           <ThemePickerGrid
             value={themeId}
@@ -149,7 +151,8 @@ export default function AppearanceSettingsPage() {
             </label>
           </div>
         </section>
-      </div>
+        </div>
+      </SettingsScroll>
     </AppShell>
   );
 }

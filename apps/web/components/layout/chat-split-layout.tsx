@@ -23,14 +23,14 @@ export function ChatSplitLayout({ children }: { children: React.ReactNode }) {
           activeId={activeId}
           className={cn(
             inConversation &&
-              "hidden w-full flex-col xl:flex xl:w-[340px] xl:shrink-0",
+              "hidden w-full flex-col lg:flex lg:shrink-0 chat-list-panel",
           )}
         />
 
         <div
           className={cn(
             "chat-column flex min-w-0 flex-1 flex-col",
-            isListPage && "hidden xl:flex",
+            isListPage && "hidden lg:flex",
             inConversation && "w-full",
           )}
         >
@@ -49,15 +49,20 @@ function ChatEmptyPane() {
   const { activeTheme } = useTheme();
 
   return (
-    <div className="chat-thread-bg flex h-full flex-col items-center justify-center gap-4 px-8 text-center">
-      <div className="theme-mascot-frame relative z-10 flex h-28 w-28 items-center justify-center overflow-hidden">
-        <ThemeMascot themeId={activeTheme.id as PresetThemeId} size={96} />
-      </div>
-      <div className="relative z-10">
-        <h2 className="text-xl font-bold tracking-tight text-text-primary">
-          Chọn cuộc trò chuyện
-        </h2>
-        <ThemeTagline themeId={activeTheme.id} className="mx-auto mt-2 max-w-[280px]" />
+    <div className="chat-thread-bg flex h-full flex-col items-center justify-center px-8 text-center lg:px-12">
+      <div className="relative z-10 flex max-w-md flex-col items-center gap-5">
+        <div className="theme-mascot-frame flex h-28 w-28 items-center justify-center overflow-hidden lg:h-32 lg:w-32">
+          <ThemeMascot themeId={activeTheme.id as PresetThemeId} size={96} />
+        </div>
+        <div>
+          <h2 className="text-xl font-bold tracking-tight text-text-primary lg:text-2xl">
+            Chọn cuộc trò chuyện
+          </h2>
+          <p className="mx-auto mt-2 max-w-[320px] text-sm leading-relaxed text-text-secondary lg:text-[15px]">
+            Chọn từ danh sách bên trái hoặc bắt đầu cuộc trò chuyện mới
+          </p>
+          <ThemeTagline themeId={activeTheme.id} className="mx-auto mt-3 max-w-[300px]" />
+        </div>
       </div>
     </div>
   );

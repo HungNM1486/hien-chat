@@ -141,7 +141,7 @@ export function MessageBubble({
       >
         <div
           className={cn(
-            "relative max-w-[82%] px-3.5 py-2.5 md:max-w-[72%]",
+            "relative max-w-[82%] px-3.5 py-2.5 md:max-w-[72%] lg:max-w-[min(480px,65%)]",
             isOwn ? "bubble-sent" : "bubble-received",
             isOwn && showTail && "bubble-tail-sent",
             !isOwn && showTail && "bubble-tail-received",
@@ -259,8 +259,9 @@ export function MessageList({
   return (
     <div
       ref={scrollRef}
-      className="chat-scroll-region relative z-10 px-3 py-4 md:px-6"
+      className="chat-scroll-region relative z-10 px-3 py-4 md:px-6 lg:px-8"
     >
+      <div className="desktop-thread-stack flex flex-col">
       {hasMore && (
         <button
           type="button"
@@ -318,6 +319,7 @@ export function MessageList({
           </div>
         );
       })}
+      </div>
     </div>
   );
 }

@@ -42,13 +42,14 @@ export function ConversationItem({ conversation, activeId }: ConversationItemPro
   return (
     <Link
       href={`/chats/${conversation.id}`}
+      data-active={isActive}
       className={cn(
-        "pressable flex min-h-[72px] items-center gap-3 px-4 py-3 transition-colors",
+        "conversation-item-active-bar pressable flex min-h-[72px] items-center gap-3 px-4 py-3 transition-colors lg:px-5",
         "border-b border-border/40 last:border-b-0",
         isActive
-          ? "bg-primary/[0.08]"
+          ? "bg-primary/[0.08] lg:bg-primary/[0.06]"
           : hasUnread
-            ? "bg-background"
+            ? "bg-background lg:bg-surface"
             : "bg-surface hover:bg-foreground/[0.03]",
       )}
     >
