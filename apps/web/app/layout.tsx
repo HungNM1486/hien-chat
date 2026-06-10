@@ -54,7 +54,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi" className={`${nunito.variable} ${jetbrainsMono.variable} h-full`}>
-      <body className="min-h-full bg-background text-text-primary antialiased">
+      <body className="relative min-h-full bg-background text-text-primary antialiased">
+        <a href="#main-content" className="skip-to-content">
+          Bỏ qua đến nội dung
+        </a>
         <AuthProvider>
           <CryptoInitProvider>
             <ThemeProvider>

@@ -4,7 +4,6 @@ import { use, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   DotsThreeVerticalIcon,
-  LockSimpleIcon,
   PhoneIcon,
   UsersIcon,
 } from "@phosphor-icons/react";
@@ -80,9 +79,9 @@ export default function ChatPage({
 
   if (isLoading || !user) {
     return (
-      <div className="chat-column flex flex-col page-slide-in">
+      <div className="desktop-chat-thread chat-column flex h-full min-h-0 flex-1 flex-col page-slide-in">
         <AppHeader title="..." backHref={isDesktopSplit ? undefined : "/chats"} />
-        <div className="chat-scroll-region chat-thread-bg flex flex-col gap-2.5 p-4">
+        <div className="chat-scroll-region chat-thread-bg flex min-h-0 flex-1 flex-col gap-2.5 p-4">
           {[1, 2, 3, 4, 5].map((i) => (
             <div
               key={i}
@@ -99,7 +98,7 @@ export default function ChatPage({
 
   return (
     <>
-      <div className="chat-column flex flex-col page-slide-in">
+      <div className="desktop-chat-thread chat-column flex h-full min-h-0 flex-1 flex-col page-slide-in">
         <AppHeader
           title={conversation?.displayName ?? "Chat"}
           subtitle={headerSubtitle}
@@ -136,51 +135,33 @@ export default function ChatPage({
         />
 
         <ConversationTheme
-          className="chat-column flex min-h-0 flex-1 flex-col chat-thread-bg"
+          className="relative flex min-h-0 flex-1 flex-col overflow-hidden chat-thread-bg"
           themeOverride={conversation?.settings?.themeOverride}
           wallpaperUrl={conversation?.settings?.wallpaperUrl}
         >
-          <div className="chat-column-header hidden px-5 py-1.5 lg:block">
-            <p className="flex items-center gap-1.5 text-xs text-text-secondary">
-              {!isGroup && (
-                <span
-                  className={cn(
-                    "inline-block h-2 w-2 rounded-full",
-                    otherUserOnline
-                      ? "bg-online shadow-[0_0_6px_color-mix(in_srgb,var(--online)_50%,transparent)]"
-                      : "bg-text-secondary/40",
-                  )}
-                />
-              )}
-              {statusLabel}
-              {conversation?.encryptionMode === "e2e" && (
-                <span className="inline-flex items-center gap-0.5 text-primary">
-                  <LockSimpleIcon size={12} weight="fill" aria-hidden />
-                  E2E
-                </span>
-              )}
-            </p>
+          <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+            <MessageList
+              conversationId={id}
+              messages={messages}
+              currentUserId={user.id}
+              isMessageRead={isMessageRead}
+              showSenderNames={isGroup}
+              onLoadMore={loadMore}
+              hasMore={hasMore}
+              isLoadingMore={isLoadingMore}
+              onOpenImage={setLightboxUrl}
+              onReply={setReplyTo}
+              onReaction={toggleReaction}
+              onPin={(msg) => {
+                void pinMessage(id, msg.id).then(() =>
+                  toast("Đã ghim tin", "success"),
+                );
+              }}
+            />
+
+            <TypingIndicator conversationId={id} />
           </div>
 
-          <MessageList
-            messages={messages}
-            currentUserId={user.id}
-            isMessageRead={isMessageRead}
-            showSenderNames={isGroup}
-            onLoadMore={loadMore}
-            hasMore={hasMore}
-            isLoadingMore={isLoadingMore}
-            onOpenImage={setLightboxUrl}
-            onReply={setReplyTo}
-            onReaction={toggleReaction}
-            onPin={(msg) => {
-              void pinMessage(id, msg.id).then(() =>
-                toast("Đã ghim tin", "success"),
-              );
-            }}
-          />
-
-          <TypingIndicator conversationId={id} />
           <MessageComposer
             onSend={sendMessage}
             onSendImage={sendImage}

@@ -36,6 +36,7 @@ export function BottomNav() {
               className={cn(
                 "pressable relative flex flex-1 flex-col items-center justify-center gap-0.5",
                 "min-h-[var(--touch-target)] text-[11px] font-semibold transition-colors",
+                "rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:ring-offset-2 focus-visible:ring-offset-surface",
                 active ? "text-primary" : "text-text-secondary",
               )}
             >

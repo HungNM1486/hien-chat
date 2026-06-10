@@ -19,9 +19,9 @@ export function AppShell({
   className,
 }: AppShellProps) {
   return (
-    <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-transparent md:h-auto md:min-h-full md:p-3 lg:p-4 xl:p-5">
+    <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-transparent md:p-3 lg:p-4 xl:p-5">
       <div
-        className="theme-shell-frame mx-auto flex h-full min-h-0 w-full flex-1 overflow-hidden md:min-h-[calc(100dvh-1.5rem)] md:rounded-[var(--radius-card,20px)] md:border md:border-border/60 md:bg-surface/75 md:backdrop-blur-xl lg:min-h-[calc(100dvh-2rem)] xl:min-h-[calc(100dvh-2.5rem)]"
+        className="theme-shell-frame mx-auto flex h-full min-h-0 w-full flex-1 overflow-hidden md:rounded-[var(--radius-card,20px)] md:border md:border-border/60 md:bg-surface/75 md:backdrop-blur-xl"
         style={{ maxWidth: "min(100%, var(--shell-max-width))" }}
       >
         <SidebarNav />
@@ -29,6 +29,7 @@ export function AppShell({
           <div className="theme-accent-bar hidden shrink-0 md:block" aria-hidden />
           {header}
           <main
+            id="main-content"
             className={cn(
               "flex min-h-0 flex-1 flex-col overflow-hidden",
               !hideBottomNav && "pb-[calc(var(--bottom-nav-height)+var(--safe-area-bottom))] md:pb-0",

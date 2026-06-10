@@ -25,14 +25,20 @@ export function TypingIndicator({ conversationId }: TypingIndicatorProps) {
   }
 
   return (
-    <div className="chat-column-footer relative z-10 px-4 pb-2">
-      <div className="inline-flex items-center gap-2 rounded-2xl border border-border/50 bg-bubble-received/80 px-3 py-2 text-sm text-text-secondary shadow-sm backdrop-blur-sm">
+    <div
+      className="shrink-0 px-3 pb-1 pt-0 lg:px-8"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="desktop-thread-stack">
+      <div className="inline-flex items-center gap-2 rounded-2xl border border-border/50 bg-bubble-received/90 px-3 py-2 text-sm text-text-secondary shadow-sm backdrop-blur-sm">
         <span>{label}</span>
         <span className="inline-flex items-center gap-0.5" aria-hidden>
           <span className="typing-dot h-1.5 w-1.5 rounded-full bg-primary" />
           <span className="typing-dot h-1.5 w-1.5 rounded-full bg-primary" />
           <span className="typing-dot h-1.5 w-1.5 rounded-full bg-primary" />
         </span>
+      </div>
       </div>
     </div>
   );

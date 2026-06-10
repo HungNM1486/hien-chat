@@ -35,6 +35,7 @@ export function NewChatSheet({ open, onClose, onCreated }: NewChatSheetProps) {
 
   useEffect(() => {
     if (!open) return;
+    setLoading(true);
     fetchUsers()
       .then(setUsers)
       .finally(() => setLoading(false));
@@ -45,7 +46,6 @@ export function NewChatSheet({ open, onClose, onCreated }: NewChatSheetProps) {
     setGroupName("");
     setSelectedIds(new Set());
     setSearch("");
-    setLoading(true);
     onClose();
   };
 
@@ -164,10 +164,10 @@ export function NewChatSheet({ open, onClose, onCreated }: NewChatSheetProps) {
           <div className="space-y-2 px-3 py-4">
             {[1, 2, 3].map((i) => (
               <div key={i} className="flex items-center gap-3 px-2 py-2">
-                <div className="h-10 w-10 animate-pulse rounded-[14px] bg-surface-elevated" />
+                <div className="h-10 w-10 skeleton-shimmer rounded-[14px]" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-3.5 w-1/3 animate-pulse rounded bg-surface-elevated" />
-                  <div className="h-3 w-1/2 animate-pulse rounded bg-surface-elevated/70" />
+                  <div className="h-3.5 w-1/3 skeleton-shimmer rounded-md" />
+                  <div className="h-3 w-1/2 skeleton-shimmer rounded-md" />
                 </div>
               </div>
             ))}

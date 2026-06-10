@@ -172,7 +172,7 @@ export function MessageComposer({
             placeholder={placeholder}
             className={cn(
               "block max-h-[120px] min-h-[var(--composer-min-height)] w-full min-w-0 resize-none rounded-[22px]",
-              "border border-border/70 bg-surface px-3 py-2.5 text-[length:var(--font-size-base)] text-text-primary",
+              "border border-border/70 bg-surface px-4 py-2.5 text-[length:var(--font-size-base)] leading-snug text-text-primary",
               "outline-none transition-[border-color,box-shadow] placeholder:text-text-secondary/60",
               "focus:border-primary/40 focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--primary)_10%,transparent)]",
             )}

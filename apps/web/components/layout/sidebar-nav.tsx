@@ -24,12 +24,15 @@ export function SidebarNav() {
   );
 
   return (
-    <aside className="hidden w-[72px] shrink-0 flex-col items-center border-r border-border/50 bg-surface py-4 md:flex lg:w-52 lg:items-stretch lg:px-3 xl:w-56">
-      <div className="relative z-10 mb-4 hidden w-full px-2 lg:block">
-        <Logo markSize={32} />
-        <div className="mt-3 space-y-2">
+    <aside className="desktop-sidebar hidden shrink-0 flex-col items-center border-r border-border/50 bg-surface py-3 md:flex lg:items-stretch lg:px-2.5 lg:py-4 xl:px-3">
+      <div className="relative z-10 mb-3 hidden w-full px-1 lg:block xl:mb-4">
+        <Logo markSize={28} />
+        <div className="mt-2 space-y-1.5 xl:mt-3 xl:space-y-2">
           <ThemeBadge themeId={activeTheme.id} />
-          <ThemeTagline themeId={activeTheme.id} className="text-[12px] leading-snug" />
+          <ThemeTagline
+            themeId={activeTheme.id}
+            className="hidden text-[11px] leading-snug xl:block"
+          />
         </div>
       </div>
       <div className="mb-6 flex justify-center lg:hidden">
@@ -48,6 +51,7 @@ export function SidebarNav() {
               className={cn(
                 "pressable flex min-h-[var(--touch-target)] items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
                 "justify-center lg:justify-start",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:ring-offset-2 focus-visible:ring-offset-surface",
                 active
                   ? "bg-primary/12 text-primary"
                   : "text-text-secondary hover:bg-foreground/[0.04] hover:text-text-primary",

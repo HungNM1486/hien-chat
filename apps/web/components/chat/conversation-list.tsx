@@ -44,13 +44,11 @@ export function ConversationItem({ conversation, activeId }: ConversationItemPro
       href={`/chats/${conversation.id}`}
       data-active={isActive}
       className={cn(
-        "conversation-item-active-bar pressable flex min-h-[72px] items-center gap-3 px-4 py-3 transition-colors lg:px-5",
-        "border-b border-border/40 last:border-b-0",
-        isActive
-          ? "bg-primary/[0.08] lg:bg-primary/[0.06]"
-          : hasUnread
-            ? "bg-background lg:bg-surface"
-            : "bg-surface hover:bg-foreground/[0.03]",
+        "conversation-item-active-bar conversation-list-item-desktop pressable flex min-h-[72px] items-center gap-3 px-4 py-3 transition-colors lg:px-3.5 lg:py-2.5",
+        "border-b border-border/30 last:border-b-0 lg:mb-0 lg:border-b-0",
+        isActive && "conversation-item-active bg-primary/[0.08] lg:bg-primary/[0.06]",
+        !isActive && hasUnread && "conversation-item-unread",
+        !isActive && !hasUnread && "bg-surface hover:bg-foreground/[0.03] lg:bg-surface",
       )}
     >
       <div className="relative shrink-0">
@@ -141,7 +139,7 @@ export function ConversationList({
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="conversation-list-desktop flex flex-col">
       {conversations.map((c) => (
         <ConversationItem key={c.id} conversation={c} activeId={activeId} />
       ))}

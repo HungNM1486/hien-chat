@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { MessagePublic } from "@hien-nha/shared";
 import { ChecksIcon, CheckIcon } from "@phosphor-icons/react";
 import { ImageBubble } from "@/components/chat/image-bubble";
@@ -223,6 +223,7 @@ export function MessageBubble({
 }
 
 interface MessageListProps {
+  conversationId: string;
   messages: MessagePublic[];
   currentUserId: string;
   isMessageRead: (message: MessagePublic) => boolean;
@@ -236,7 +237,10 @@ interface MessageListProps {
   onPin?: (message: MessagePublic) => void;
 }
 
+const SCROLL_BOTTOM_THRESHOLD = 96;
+
 export function MessageList({
+  conversationId,
   messages,
   currentUserId,
   isMessageRead,
@@ -250,18 +254,96 @@ export function MessageList({
   onPin,
 }: MessageListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const stickToBottomRef = useRef(true);
+  const prevLengthRef = useRef(0);
+  const isLoadingMoreRef = useRef(false);
+
+  const scrollToBottom = useCallback((smooth = false) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const reduceMotion = document.documentElement.classList.contains("reduce-motion");
+    el.scrollTo({
+      top: el.scrollHeight,
+      behavior: smooth && !reduceMotion ? "smooth" : "auto",
+    });
+  }, []);
+
+  const scrollToBottomReliable = useCallback(
+    (smooth = false) => {
+      scrollToBottom(smooth);
+      requestAnimationFrame(() => {
+        scrollToBottom(smooth);
+        requestAnimationFrame(() => scrollToBottom(smooth));
+      });
+    },
+    [scrollToBottom],
+  );
+
+  useEffect(() => {
+    isLoadingMoreRef.current = !!isLoadingMore;
+  }, [isLoadingMore]);
 
   useEffect(() => {
     const el = scrollRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [messages.length]);
+    if (!el) return;
+
+    const handleScroll = () => {
+      const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+      stickToBottomRef.current = distanceFromBottom <= SCROLL_BOTTOM_THRESHOLD;
+    };
+
+    el.addEventListener("scroll", handleScroll, { passive: true });
+    return () => el.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    stickToBottomRef.current = true;
+    prevLengthRef.current = 0;
+
+    if (messages.length === 0) return;
+
+    scrollToBottomReliable(false);
+    const t = window.setTimeout(() => scrollToBottomReliable(false), 120);
+    return () => window.clearTimeout(t);
+  }, [conversationId, scrollToBottomReliable]);
+
+  useEffect(() => {
+    const content = contentRef.current;
+    if (!content) return;
+
+    const observer = new ResizeObserver(() => {
+      if (stickToBottomRef.current && !isLoadingMoreRef.current) {
+        scrollToBottom(false);
+      }
+    });
+    observer.observe(content);
+    return () => observer.disconnect();
+  }, [conversationId, scrollToBottom]);
+
+  useEffect(() => {
+    if (messages.length === 0) return;
+
+    const grew = messages.length > prevLengthRef.current;
+    const isInitialBatch = prevLengthRef.current === 0;
+    prevLengthRef.current = messages.length;
+
+    if (isLoadingMoreRef.current) return;
+
+    if (!stickToBottomRef.current && !isInitialBatch) return;
+    if (!grew && !isInitialBatch) return;
+
+    requestAnimationFrame(() => {
+      scrollToBottomReliable(grew && messages.length > 20 && !isInitialBatch);
+    });
+  }, [messages, scrollToBottomReliable]);
 
   return (
     <div
       ref={scrollRef}
-      className="chat-scroll-region relative z-10 px-3 py-4 md:px-6 lg:px-8"
+      className="chat-scroll-region relative z-10 min-h-0 flex-1 px-3 py-4 md:px-6 lg:px-8"
     >
-      <div className="desktop-thread-stack flex flex-col">
+      <div ref={contentRef} className="desktop-thread-stack flex flex-col">
       {hasMore && (
         <button
           type="button"
