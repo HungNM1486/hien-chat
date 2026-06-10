@@ -1,9 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
+import { hasSession } from "@hien-nha/crypto";
 import type { WsClientEvent, WsServerEvent } from "@hien-nha/shared";
 import { getAccessToken } from "@/lib/api-client";
 import { getWsUrl } from "@/lib/chat-api";
+import { clearE2ESession } from "@/lib/e2e-session";
 import { useAuthStore } from "@/stores/auth-store";
 import { useChatStore } from "@/stores/chat-store";
 import { useE2EStore } from "@/stores/e2e-store";
@@ -120,18 +122,35 @@ export function useWebSocket() {
             data.emoji,
           );
           break;
-        case "conversation:update":
+        case "conversation:update": {
+          const previous = conversations.find(
+            (c) => c.id === data.conversation.id,
+          );
           upsertConversation(data.conversation);
+          if (
+            previous?.encryptionMode === "e2e" &&
+            data.conversation.encryptionMode !== "e2e"
+          ) {
+            void clearE2ESession(data.conversation.id);
+          }
           break;
+        }
         case "e2e:request":
-          setPendingE2E({
-            conversationId: data.conversationId,
-            requesterId: data.requesterId,
-            requesterName: data.requesterName,
+          void hasSession(data.conversationId).then((unlocked) => {
+            if (!unlocked) {
+              setPendingE2E({
+                conversationId: data.conversationId,
+                requesterId: data.requesterId,
+                requesterName: data.requesterName,
+                salt: data.salt,
+              });
+            }
           });
           break;
         case "e2e:enabled":
+          break;
         case "e2e:disabled":
+          void clearE2ESession(data.conversationId);
           break;
         default:
           dispatchCallServerEvent(data);

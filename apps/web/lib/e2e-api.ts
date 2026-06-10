@@ -1,4 +1,4 @@
-import type { PreKeyBundleInput } from "@hien-nha/shared";
+import type { PendingE2ERequest, PreKeyBundleInput } from "@hien-nha/shared";
 import type { PreKeyBundlePublic } from "@hien-nha/crypto";
 import { apiFetch } from "./api-client";
 
@@ -20,22 +20,36 @@ export async function fetchPreKeyBundle(
   return data.bundle;
 }
 
-export async function requestE2E(conversationId: string): Promise<void> {
-  await apiFetch(`/conversations/${conversationId}/e2e/request`, {
+export async function requestE2E(
+  conversationId: string,
+  keyData: { salt: string; verifier: string },
+): Promise<{ conversation: import("@hien-nha/shared").ConversationPublic }> {
+  return apiFetch(`/conversations/${conversationId}/e2e/request`, {
     method: "POST",
+    body: JSON.stringify(keyData),
   });
 }
 
-export async function acceptE2E(conversationId: string) {
-  return apiFetch<{ conversation: import("@hien-nha/shared").ConversationPublic }>(
-    `/conversations/${conversationId}/e2e/accept`,
-    { method: "POST" },
+export async function fetchPendingE2E(): Promise<PendingE2ERequest | null> {
+  const data = await apiFetch<{ request: PendingE2ERequest | null }>(
+    "/e2e/pending",
   );
+  return data.request;
 }
 
-export async function declineE2E(conversationId: string): Promise<void> {
-  await apiFetch(`/conversations/${conversationId}/e2e/decline`, {
+export async function fetchE2ESalt(
+  conversationId: string,
+): Promise<{ salt: string }> {
+  return apiFetch(`/conversations/${conversationId}/e2e/key-info`);
+}
+
+export async function verifyE2EKey(
+  conversationId: string,
+  verifier: string,
+): Promise<void> {
+  await apiFetch(`/conversations/${conversationId}/e2e/verify`, {
     method: "POST",
+    body: JSON.stringify({ verifier }),
   });
 }
 

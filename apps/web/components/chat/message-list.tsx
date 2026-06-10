@@ -2,10 +2,16 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { MessagePublic } from "@hien-nha/shared";
-import { ChecksIcon, CheckIcon } from "@phosphor-icons/react";
+import {
+  ChecksIcon,
+  CheckIcon,
+  LockKeyIcon,
+} from "@phosphor-icons/react";
+import { isEncryptedPayload } from "@hien-nha/crypto";
 import { ImageBubble } from "@/components/chat/image-bubble";
 import { VoiceBubble } from "@/components/chat/voice-bubble";
 import { ReplyPreview } from "@/components/chat/reply-preview";
+import { DecryptReveal } from "@/components/chat/decrypt-reveal";
 import { MessageContextMenu } from "@/components/chat/message-context-menu";
 import { cn } from "@/lib/utils";
 
@@ -46,6 +52,18 @@ function groupReactions(reactions: MessagePublic["reactions"]) {
   return Array.from(map.values());
 }
 
+function encryptedPreview(content: string): string {
+  try {
+    const parsed = JSON.parse(content) as { ct?: string };
+    if (typeof parsed.ct === "string") {
+      return parsed.ct.match(/.{1,8}/g)?.slice(0, 6).join(" ") ?? parsed.ct;
+    }
+  } catch {
+    // Show a bounded raw payload when it is not a valid envelope.
+  }
+  return content.slice(0, 56);
+}
+
 interface MessageBubbleProps {
   message: MessagePublic;
   isOwn: boolean;
@@ -76,7 +94,16 @@ export function MessageBubble({
   const isDeleted = !!message.deletedAt;
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
+  const [decryptAnimating, setDecryptAnimating] = useState(
+    message.decryptionState === "revealed",
+  );
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (message.decryptionState === "revealed") {
+      setDecryptAnimating(true);
+    }
+  }, [message.decryptionState, message.id]);
 
   const reactionGroups = groupReactions(message.reactions);
   const myReactions = new Set(
@@ -116,13 +143,40 @@ export function MessageBubble({
       );
     }
 
+    const showCiphertext =
+      message.encrypted ||
+      message.decryptionState === "locked" ||
+      isEncryptedPayload(message.content);
+
+    if (showCiphertext && message.decryptionState !== "revealed") {
+      return (
+        <div className="encrypted-message-shell is-locked">
+          <div className="encrypted-cipher-noise" aria-hidden />
+          <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] opacity-80">
+            <LockKeyIcon size={14} weight="fill" aria-hidden />
+            {message.decryptionState === "locked"
+              ? "Mã không đúng"
+              : "Ciphertext"}
+          </div>
+          <p className="encrypted-message-code break-all font-mono text-xs leading-relaxed">
+            {encryptedPreview(message.content)}
+          </p>
+        </div>
+      );
+    }
+
     switch (message.contentType) {
       case "image":
         return <ImageBubble message={message} onOpen={onOpenImage} />;
       case "voice":
         return <VoiceBubble message={message} isOwn={isOwn} />;
       default:
-        return (
+        return message.decryptionState === "revealed" ? (
+          <DecryptReveal
+            text={message.content}
+            onAnimatingChange={setDecryptAnimating}
+          />
+        ) : (
           <p className="whitespace-pre-wrap break-words text-[length:var(--font-size-base)] leading-[1.45]">
             {message.content}
           </p>
@@ -148,6 +202,14 @@ export function MessageBubble({
             !showTail && (isOwn ? "rounded-br-[var(--radius-bubble)]" : "rounded-bl-[var(--radius-bubble)]"),
             showTail && "rounded-[var(--radius-bubble)]",
             isDeleted && "opacity-70",
+            (message.encrypted ||
+              message.decryptionState === "locked" ||
+              isEncryptedPayload(message.content)) &&
+              message.decryptionState !== "revealed" &&
+              "bubble-encrypted",
+            message.decryptionState === "revealed" &&
+              decryptAnimating &&
+              "bubble-decrypting",
           )}
           onContextMenu={isDeleted ? undefined : handleContextMenu}
           onTouchStart={isDeleted ? undefined : handleTouchStart}

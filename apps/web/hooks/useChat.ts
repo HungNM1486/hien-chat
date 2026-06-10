@@ -160,20 +160,21 @@ export function useChat(conversationId: string) {
   }, [conversationId, setMessages, setOtherRead, setOtherOnline, upsertConversation]);
 
   useEffect(() => {
-    if (conversation?.encryptionMode !== "e2e" || !e2eReady) return;
-    const needsDecrypt = messages.some(
-      (m) => m.encrypted || isEncryptedPayload(m.content),
-    );
-    if (!needsDecrypt) return;
+    if (conversation?.encryptionMode !== "e2e") return;
+
+    const needsProcessing = messages.some((m) => {
+      if (!m.encrypted && !isEncryptedPayload(m.content)) return false;
+      return e2eReady
+        ? m.decryptionState !== "revealed"
+        : m.decryptionState !== "locked";
+    });
+    if (!needsProcessing) return;
 
     let cancelled = false;
-    void decryptMessages(messages).then((decrypted) => {
+    void decryptMessages(messages).then((processed) => {
       if (cancelled) return;
-      const stillEncrypted = decrypted.some(
-        (m) => m.encrypted || isEncryptedPayload(m.content),
-      );
-      if (stillEncrypted) return;
-      setMessages(conversationId, decrypted);
+      const changed = processed.some((message, index) => message !== messages[index]);
+      if (changed) setMessages(conversationId, processed);
     });
 
     return () => {
@@ -187,6 +188,31 @@ export function useChat(conversationId: string) {
     decryptMessages,
     setMessages,
   ]);
+
+  useEffect(() => {
+    const retryLockedMessages = (event: Event) => {
+      const detail = (event as CustomEvent<{ conversationId: string }>).detail;
+      if (detail?.conversationId !== conversationId) return;
+      const current =
+        useChatStore.getState().messagesByConversation[conversationId] ??
+        EMPTY_MESSAGES;
+      const reset = current.map((message) =>
+        message.decryptionState === "locked"
+          ? { ...message, decryptionState: undefined }
+          : message,
+      );
+      if (reset.some((message, index) => message !== current[index])) {
+        setMessages(conversationId, reset);
+      }
+    };
+
+    window.addEventListener("hien:e2e-session-changed", retryLockedMessages);
+    return () =>
+      window.removeEventListener(
+        "hien:e2e-session-changed",
+        retryLockedMessages,
+      );
+  }, [conversationId, setMessages]);
 
   const replaceOptimistic = useCallback(
     (optimisticId: string, message: MessagePublic) => {
@@ -218,13 +244,20 @@ export function useChat(conversationId: string) {
     setIsLoadingMore(true);
     try {
       const data = await fetchMessages(conversationId, nextCursor);
-      prependMessages(conversationId, data.messages);
+      const decrypted = await decryptMessages(data.messages);
+      prependMessages(conversationId, decrypted);
       setHasMore(data.hasMore);
       setNextCursor(data.nextCursor);
     } finally {
       setIsLoadingMore(false);
     }
-  }, [conversationId, nextCursor, isLoadingMore, prependMessages]);
+  }, [
+    conversationId,
+    nextCursor,
+    isLoadingMore,
+    prependMessages,
+    decryptMessages,
+  ]);
 
   const sendChatMessage = useCallback(
     async (content: string) => {

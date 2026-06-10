@@ -11,6 +11,9 @@ export {
   getSessionKey,
   removeSession,
   getLocalBundleForUpload,
+  createSharedSecretSession,
+  unlockSharedSecretSession,
+  deriveSharedKeyMaterial,
 } from "./session.js";
 export {
   encryptPlaintext,

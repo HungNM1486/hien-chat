@@ -12,13 +12,17 @@ export async function encryptPlaintext(
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const encoded = new TextEncoder().encode(plaintext);
   const ciphertext = await crypto.subtle.encrypt(
-    { name: "AES-GCM", iv },
+    {
+      name: "AES-GCM",
+      iv,
+      additionalData: new TextEncoder().encode(conversationId),
+    },
     key,
     encoded,
   );
 
   const payload: EncryptedPayload = {
-    v: 1,
+    v: 2,
     iv: bufToB64(iv.buffer),
     ct: bufToB64(ciphertext),
   };
@@ -43,7 +47,11 @@ export async function decryptCiphertext(
   const iv = new Uint8Array(b64ToBuf(payload.iv));
   const ct = b64ToBuf(payload.ct);
   const decrypted = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv },
+    {
+      name: "AES-GCM",
+      iv,
+      additionalData: new TextEncoder().encode(conversationId),
+    },
     key,
     ct,
   );
@@ -54,7 +62,11 @@ export async function decryptCiphertext(
 export function isEncryptedPayload(content: string): boolean {
   try {
     const parsed = JSON.parse(content) as EncryptedPayload;
-    return parsed.v === 1 && typeof parsed.ct === "string";
+    return (
+      parsed.v === 2 &&
+      typeof parsed.iv === "string" &&
+      typeof parsed.ct === "string"
+    );
   } catch {
     return false;
   }
@@ -70,7 +82,11 @@ export async function encryptBlob(
   const buffer = await blob.arrayBuffer();
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const ciphertext = await crypto.subtle.encrypt(
-    { name: "AES-GCM", iv },
+    {
+      name: "AES-GCM",
+      iv,
+      additionalData: new TextEncoder().encode(conversationId),
+    },
     key,
     buffer,
   );
@@ -94,7 +110,11 @@ export async function decryptBlob(
   const ct = bytes.slice(12);
 
   const decrypted = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv },
+    {
+      name: "AES-GCM",
+      iv,
+      additionalData: new TextEncoder().encode(conversationId),
+    },
     key,
     ct,
   );

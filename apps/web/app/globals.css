@@ -842,11 +842,308 @@ html:not([data-theme]) {
   animation: fade-up 0.3s var(--ease-out) both;
 }
 
+.e2e-key-panel {
+  background:
+    radial-gradient(
+      circle at 18% 0%,
+      color-mix(in srgb, var(--primary) 18%, transparent),
+      transparent 34%
+    ),
+    color-mix(in srgb, var(--surface-elevated) 96%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 24%, var(--border));
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 60%, transparent),
+    0 28px 80px rgb(var(--shadow-color) / 0.35);
+}
+
+.e2e-key-orb {
+  display: flex;
+  height: 48px;
+  width: 48px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--primary) 20%, transparent),
+    0 0 32px color-mix(in srgb, var(--primary) 15%, transparent);
+}
+
+.bubble-encrypted {
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--primary) 28%, var(--border));
+}
+
+.bubble-decrypting {
+  animation: decrypt-bubble-pulse 1.1s var(--ease-out);
+  border-color: color-mix(in srgb, var(--primary) 55%, var(--border)) !important;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--primary) 35%, transparent),
+    0 0 28px color-mix(in srgb, var(--primary) 28%, transparent),
+    0 8px 24px color-mix(in srgb, var(--shadow-color) 18%, transparent);
+}
+
+.encrypted-message-shell {
+  position: relative;
+  min-width: min(240px, 62vw);
+  overflow: hidden;
+}
+
+.encrypted-message-shell.is-locked::after {
+  content: "";
+  position: absolute;
+  inset: -40% -20%;
+  background: linear-gradient(
+    105deg,
+    transparent 42%,
+    color-mix(in srgb, var(--primary) 16%, transparent) 50%,
+    transparent 58%
+  );
+  animation: cipher-sheen 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.encrypted-cipher-noise {
+  position: absolute;
+  inset: 0;
+  opacity: 0.35;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      color-mix(in srgb, var(--primary) 8%, transparent) 2px,
+      color-mix(in srgb, var(--primary) 8%, transparent) 3px
+    );
+  animation: cipher-noise-drift 4s linear infinite;
+  pointer-events: none;
+  mix-blend-mode: soft-light;
+}
+
+.encrypted-message-code {
+  position: relative;
+  z-index: 1;
+  color: currentColor;
+  opacity: 0.78;
+  letter-spacing: 0.06em;
+  text-shadow:
+    0 0 10px color-mix(in srgb, var(--primary) 40%, transparent),
+    0 0 22px color-mix(in srgb, var(--primary) 18%, transparent);
+  animation: cipher-flicker 3.2s steps(2, end) infinite;
+}
+
+.decrypt-reveal-shell {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.decrypt-scan-beam {
+  position: absolute;
+  inset: -20% 0;
+  z-index: 3;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    color-mix(in srgb, var(--primary) 8%, transparent) 42%,
+    color-mix(in srgb, var(--on-primary) 75%, var(--primary)) 50%,
+    color-mix(in srgb, var(--primary) 8%, transparent) 58%,
+    transparent 100%
+  );
+  opacity: 0;
+  transform: translateY(-120%);
+  animation: decrypt-scan-sweep 0.62s var(--ease-out) forwards;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.decrypt-scan-flare {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  opacity: 0;
+  background: radial-gradient(
+    ellipse 90% 40% at 50% 0%,
+    color-mix(in srgb, var(--primary) 35%, transparent),
+    transparent 70%
+  );
+  animation: decrypt-flare-pop 0.7s var(--ease-out) forwards;
+  pointer-events: none;
+}
+
+.decrypt-noise-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0.22;
+  background:
+  repeating-linear-gradient(
+    90deg,
+    transparent 0 3px,
+    color-mix(in srgb, var(--primary) 12%, transparent) 3px 4px
+  );
+  animation: decrypt-noise-fade 0.9s var(--ease-out) forwards;
+  pointer-events: none;
+}
+
+.decrypt-reveal-text {
+  position: relative;
+  z-index: 4;
+}
+
+.decrypt-char {
+  display: inline;
+  transition: color 0.12s ease, text-shadow 0.18s ease;
+}
+
+.decrypt-char.is-scrambling {
+  color: color-mix(in srgb, var(--primary) 88%, white);
+  text-shadow:
+    0 0 8px color-mix(in srgb, var(--primary) 65%, transparent),
+    0 0 16px color-mix(in srgb, var(--primary) 30%, transparent);
+  animation: decrypt-scramble-jitter 0.09s steps(2, end) infinite;
+}
+
+.decrypt-char.is-settled {
+  color: inherit;
+}
+
+.decrypt-char.is-glowing {
+  color: color-mix(in srgb, var(--primary) 70%, var(--text-primary));
+  text-shadow:
+    0 0 10px color-mix(in srgb, var(--primary) 80%, transparent),
+    0 0 20px color-mix(in srgb, var(--primary) 35%, transparent);
+  animation: decrypt-char-lock 0.34s var(--ease-out) forwards;
+}
+
+@keyframes cipher-sheen {
+  0%,
+  100% {
+    transform: translateX(-30%);
+    opacity: 0;
+  }
+  45% {
+    opacity: 0.7;
+  }
+  55% {
+    transform: translateX(30%);
+    opacity: 0.7;
+  }
+}
+
+@keyframes cipher-noise-drift {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(6px);
+  }
+}
+
+@keyframes cipher-flicker {
+  0%,
+  100% {
+    opacity: 0.78;
+  }
+  50% {
+    opacity: 0.62;
+  }
+}
+
+@keyframes decrypt-bubble-pulse {
+  0% {
+    filter: brightness(1);
+    transform: scale(1);
+  }
+  18% {
+    filter: brightness(1.12);
+    transform: scale(1.012);
+  }
+  100% {
+    filter: brightness(1);
+    transform: scale(1);
+  }
+}
+
+@keyframes decrypt-scan-sweep {
+  0% {
+    opacity: 0;
+    transform: translateY(-120%);
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(130%);
+  }
+}
+
+@keyframes decrypt-flare-pop {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes decrypt-noise-fade {
+  0% {
+    opacity: 0.35;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes decrypt-scramble-jitter {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-0.6px);
+  }
+  100% {
+    transform: translateY(0.4px);
+  }
+}
+
+@keyframes decrypt-char-lock {
+  0% {
+    transform: scale(1.14);
+    filter: blur(1px);
+  }
+  100% {
+    transform: scale(1);
+    filter: blur(0);
+    text-shadow: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .page-slide-in,
   .animate-fade-up,
   .typing-dot,
-  .skeleton-shimmer {
-    animation: none;
+  .skeleton-shimmer,
+  .bubble-decrypting,
+  .encrypted-message-shell.is-locked::after,
+  .encrypted-cipher-noise,
+  .encrypted-message-code,
+  .decrypt-scan-beam,
+  .decrypt-scan-flare,
+  .decrypt-noise-layer,
+  .decrypt-char.is-scrambling,
+  .decrypt-char.is-glowing {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+    filter: none;
+    text-shadow: none;
   }
 }

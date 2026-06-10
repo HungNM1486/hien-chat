@@ -186,6 +186,8 @@ export const e2eRequests = pgTable("e2e_requests", {
   requesterId: uuid("requester_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
+  salt: text("salt").notNull(),
+  verifier: text("verifier").notNull(),
   status: varchar("status", { length: 16 }).notNull().default("pending"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()

@@ -13,6 +13,7 @@ import { db } from "../db/index.js";
 import {
   conversationMembers,
   conversations,
+  e2eRequests,
   MessageReactions,
   messages,
   users,
@@ -348,6 +349,56 @@ export async function conversationRoutes(app: FastifyInstance) {
         });
       }
 
+      const [conversation] = await db
+        .select({ settings: conversations.settings })
+        .from(conversations)
+        .where(eq(conversations.id, id))
+        .limit(1);
+      const encryptionMode = (
+        conversation?.settings as Record<string, unknown> | undefined
+      )?.encryptionMode;
+      let requiresEncryption = encryptionMode === "e2e";
+      if (!requiresEncryption) {
+        const [pendingRequest] = await db
+          .select({ id: e2eRequests.id })
+          .from(e2eRequests)
+          .where(
+            and(
+              eq(e2eRequests.conversationId, id),
+              eq(e2eRequests.status, "pending"),
+            ),
+          )
+          .limit(1);
+        requiresEncryption = Boolean(pendingRequest);
+      }
+
+      if (requiresEncryption) {
+        let validCiphertext = false;
+        try {
+          const payload = JSON.parse(parsed.data.content) as {
+            v?: number;
+            iv?: unknown;
+            ct?: unknown;
+          };
+          validCiphertext =
+            payload.v === 2 &&
+            typeof payload.iv === "string" &&
+            typeof payload.ct === "string";
+        } catch {
+          validCiphertext = false;
+        }
+
+        if (
+          parsed.data.encrypted !== true ||
+          parsed.data.contentType !== "text" ||
+          !validCiphertext
+        ) {
+          return reply.code(400).send({
+            error: "Cuộc trò chuyện E2EE chỉ nhận tin nhắn văn bản đã mã hóa",
+          });
+        }
+      }
+
       const [message] = await db
         .insert(messages)
         .values({
@@ -415,6 +466,11 @@ export async function conversationRoutes(app: FastifyInstance) {
       }
       if (existing.deletedAt) {
         return reply.code(400).send({ error: "Tin nhắn đã bị xóa" });
+      }
+      if (existing.encrypted) {
+        return reply
+          .code(400)
+          .send({ error: "Chưa hỗ trợ sửa tin nhắn đã mã hóa" });
       }
 
       const elapsed = Date.now() - existing.createdAt.getTime();

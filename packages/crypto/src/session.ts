@@ -6,7 +6,9 @@ import {
   saveTrustedIdentity,
 } from "./storage.js";
 import type { PreKeyBundlePublic, SessionRecord } from "./types.js";
-import { bufToB64 } from "./encoding.js";
+import { b64ToBuf, bufToB64 } from "./encoding.js";
+
+const SHARED_KEY_ITERATIONS = 310_000;
 
 async function deriveSessionKey(
   privateKey: CryptoKey,
@@ -33,6 +35,87 @@ async function importRawKey(rawB64: string): Promise<CryptoKey> {
   ]);
 }
 
+export async function deriveSharedKeyMaterial(
+  conversationId: string,
+  secret: string,
+  saltB64: string,
+): Promise<{ keyRaw: string; verifier: string }> {
+  const normalizedSecret = secret.normalize("NFKC");
+  if (normalizedSecret.length < 6) {
+    throw new Error("Mã bí mật phải có ít nhất 6 ký tự");
+  }
+
+  const baseKey = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(normalizedSecret),
+    "PBKDF2",
+    false,
+    ["deriveBits"],
+  );
+  const material = await crypto.subtle.deriveBits(
+    {
+      name: "PBKDF2",
+      hash: "SHA-256",
+      iterations: SHARED_KEY_ITERATIONS,
+      salt: new Uint8Array(b64ToBuf(saltB64)),
+    },
+    baseKey,
+    512,
+  );
+  const bytes = new Uint8Array(material);
+  const encryptionKey = bytes.slice(0, 32);
+  const confirmationKey = bytes.slice(32);
+  const verifierInput = new Uint8Array(
+    confirmationKey.length + new TextEncoder().encode(conversationId).length,
+  );
+  verifierInput.set(confirmationKey);
+  verifierInput.set(new TextEncoder().encode(conversationId), confirmationKey.length);
+  const verifier = await crypto.subtle.digest("SHA-256", verifierInput);
+
+  return {
+    keyRaw: bufToB64(encryptionKey.buffer),
+    verifier: bufToB64(verifier),
+  };
+}
+
+async function saveSharedSession(
+  conversationId: string,
+  keyRaw: string,
+): Promise<void> {
+  await saveSession({
+    conversationId,
+    remoteUserId: "shared-secret",
+    keyRaw,
+    createdAt: new Date().toISOString(),
+    source: "shared-secret",
+  });
+}
+
+export async function createSharedSecretSession(
+  conversationId: string,
+  secret: string,
+): Promise<{ salt: string; verifier: string }> {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const saltB64 = bufToB64(salt.buffer);
+  const material = await deriveSharedKeyMaterial(
+    conversationId,
+    secret,
+    saltB64,
+  );
+  await saveSharedSession(conversationId, material.keyRaw);
+  return { salt: saltB64, verifier: material.verifier };
+}
+
+export async function unlockSharedSecretSession(
+  conversationId: string,
+  secret: string,
+  salt: string,
+): Promise<{ verifier: string }> {
+  const material = await deriveSharedKeyMaterial(conversationId, secret, salt);
+  await saveSharedSession(conversationId, material.keyRaw);
+  return { verifier: material.verifier };
+}
+
 export async function establishSession(
   conversationId: string,
   remoteUserId: string,
@@ -54,6 +137,7 @@ export async function establishSession(
     remoteUserId,
     keyRaw,
     createdAt: new Date().toISOString(),
+    source: "prekey",
   };
 
   await saveSession(record);

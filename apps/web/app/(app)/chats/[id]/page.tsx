@@ -50,6 +50,7 @@ export default function ChatPage({
     uploadProgress,
     replyTo,
     setReplyTo,
+    e2eReady,
     loadMore,
     sendMessage,
     sendImage,
@@ -64,6 +65,8 @@ export default function ChatPage({
   const inCall = callStatus !== "idle" && callStatus !== "ended";
 
   const isGroup = conversation?.type === "group";
+  const e2eLocked =
+    conversation?.encryptionMode === "e2e" && !e2eReady;
   const statusLabel = isGroup
     ? `${conversation?.memberCount ?? conversation?.members.length ?? 0} thành viên`
     : otherUserOnline
@@ -164,10 +167,21 @@ export default function ChatPage({
 
           <MessageComposer
             onSend={sendMessage}
-            onSendImage={sendImage}
-            onSendVoice={sendVoice}
+            onSendImage={
+              conversation?.encryptionMode === "e2e" ? undefined : sendImage
+            }
+            onSendVoice={
+              conversation?.encryptionMode === "e2e" ? undefined : sendVoice
+            }
             onTyping={notifyTyping}
-            disabled={isSending}
+            disabled={isSending || e2eLocked}
+            placeholder={
+              e2eLocked
+                ? "Nhập mã bí mật trong cài đặt để mở khóa"
+                : conversation?.encryptionMode === "e2e"
+                  ? "Tin nhắn sẽ được mã hóa trên thiết bị"
+                  : undefined
+            }
             replyTo={replyTo}
             onCancelReply={() => setReplyTo(null)}
             uploadProgress={uploadProgress}

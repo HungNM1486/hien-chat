@@ -59,7 +59,6 @@ export const updateConversationSchema = z.object({
     .object({
       themeOverride: z.string().nullable().optional(),
       wallpaperUrl: z.string().url().nullable().optional(),
-      encryptionMode: z.enum(["standard", "e2e"]).optional(),
       disappearAfterHours: z.number().int().min(0).max(168).nullable().optional(),
       locked: z.boolean().optional(),
     })
@@ -78,6 +77,13 @@ export const uploadPreKeyBundleSchema = z.object({
 });
 
 export type PreKeyBundleInput = z.infer<typeof uploadPreKeyBundleSchema>;
+
+export interface PendingE2ERequest {
+  conversationId: string;
+  requesterId: string;
+  requesterName: string;
+  salt: string;
+}
 
 export type ContentType = "text" | "image" | "voice" | "file" | "poll";
 export type ConversationType = "direct" | "group";
@@ -119,6 +125,7 @@ export interface MessagePublic {
   editedAt: string | null;
   deletedAt: string | null;
   sender?: Pick<UserPublic, "id" | "displayName" | "avatarUrl">;
+  decryptionState?: "locked" | "revealed";
 }
 
 export interface ConversationMemberPublic {
@@ -145,6 +152,8 @@ export interface ConversationPublic {
 
 export interface ConversationSettings {
   encryptionMode?: EncryptionMode;
+  e2eStatus?: "pending" | "active";
+  e2eRequesterId?: string;
   themeOverride?: string | null;
   wallpaperUrl?: string | null;
   disappearAfterHours?: number | null;

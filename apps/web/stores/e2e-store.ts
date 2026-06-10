@@ -2,10 +2,11 @@
 
 import { create } from "zustand";
 
-interface E2ERequest {
+export interface E2ERequest {
   conversationId: string;
   requesterId: string;
   requesterName: string;
+  salt: string;
 }
 
 interface E2EState {

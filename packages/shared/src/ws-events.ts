@@ -1,4 +1,8 @@
-import type { MessagePublic, PresenceStatus } from "./schemas/chat.js";
+import type {
+  MessagePublic,
+  PendingE2ERequest,
+  PresenceStatus,
+} from "./schemas/chat.js";
 
 export interface WebRtcSdp {
   type: "offer" | "answer" | "pranswer" | "rollback";
@@ -40,7 +44,7 @@ export type WsServerEvent =
   | { type: "read:update"; conversationId: string; userId: string; messageId: string }
   | { type: "reaction:add"; conversationId: string; messageId: string; reaction: { emoji: string; userId: string } }
   | { type: "reaction:remove"; conversationId: string; messageId: string; userId: string; emoji: string }
-  | { type: "e2e:request"; conversationId: string; requesterId: string; requesterName: string }
+  | ({ type: "e2e:request" } & PendingE2ERequest)
   | { type: "e2e:enabled"; conversationId: string }
   | { type: "e2e:disabled"; conversationId: string }
   | { type: "conversation:update"; conversation: import("./schemas/chat.js").ConversationPublic }

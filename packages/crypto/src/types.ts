@@ -8,7 +8,7 @@ export interface PreKeyBundlePublic {
 }
 
 export interface EncryptedPayload {
-  v: 1;
+  v: 2;
   iv: string;
   ct: string;
 }
@@ -31,4 +31,5 @@ export interface SessionRecord {
   remoteUserId: string;
   keyRaw: string;
   createdAt: string;
+  source?: "prekey" | "shared-secret";
 }
