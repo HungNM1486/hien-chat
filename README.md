@@ -81,7 +81,9 @@ docker compose -f docker/docker-compose.prod.yml up -d --build
 docker compose -f docker/docker-compose.prod.yml --profile setup run --rm migrate
 ```
 
-**Lưu ý:** `NEXT_PUBLIC_API_URL` được nhúng lúc build image `web`. Đổi domain cần rebuild: `docker compose -f docker/docker-compose.prod.yml build web --no-cache`.
+**Lưu ý:** `NEXT_PUBLIC_API_URL` và `NEXT_PUBLIC_TURN_*` được nhúng lúc build image `web`. Đổi domain/TURN cần rebuild: `docker compose -f docker/docker-compose.prod.yml build web --no-cache`.
+
+**Voice call (TURN):** stack prod gồm `coturn`. Trong `.env` đặt `TURN_HOST` (vd. `turn.your-domain.com`), `TURN_PASSWORD`, …; DNS A record trỏ IP VPS; mở firewall TCP+UDP `3478` và UDP `49160-49200`. Subdomain TURN nên **DNS only** (không bật proxy Cloudflare).
 
 Compose dev/local đơn giản (kèm Caddy): `docker/docker-compose.yml`.
 

@@ -85,7 +85,15 @@ export interface PendingE2ERequest {
   salt: string;
 }
 
-export type ContentType = "text" | "image" | "voice" | "file" | "poll";
+export type ContentType = "text" | "image" | "voice" | "file" | "poll" | "call";
+
+export type CallOutcome = "completed" | "missed" | "rejected" | "busy";
+
+export interface CallContent {
+  outcome: CallOutcome;
+  durationSec: number | null;
+  callerId: string;
+}
 export type ConversationType = "direct" | "group";
 export type EncryptionMode = "standard" | "e2e";
 export type PresenceStatus = "online" | "offline" | "away";
@@ -191,7 +199,67 @@ export function parseVoiceContent(content: string): VoiceContent | null {
   }
 }
 
-export function getMessagePreview(message: MessagePublic): string {
+export function parseCallContent(content: string): CallContent | null {
+  try {
+    const parsed = JSON.parse(content) as CallContent;
+    if (
+      typeof parsed.callerId === "string" &&
+      typeof parsed.outcome === "string" &&
+      (parsed.durationSec === null || typeof parsed.durationSec === "number")
+    ) {
+      return parsed;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function formatCallDuration(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+export function getCallLabel(
+  call: CallContent,
+  viewerId: string,
+): { label: string; sublabel?: string; missed: boolean } {
+  const isCaller = viewerId === call.callerId;
+  const duration =
+    call.durationSec != null && call.durationSec > 0
+      ? formatCallDuration(call.durationSec)
+      : undefined;
+
+  switch (call.outcome) {
+    case "completed":
+      return {
+        label: isCaller ? "Cuộc gọi đi" : "Cuộc gọi đến",
+        sublabel: duration,
+        missed: false,
+      };
+    case "missed":
+      return {
+        label: isCaller ? "Đã hủy cuộc gọi" : "Cuộc gọi nhỡ",
+        missed: !isCaller,
+      };
+    case "rejected":
+      return {
+        label: isCaller ? "Cuộc gọi bị từ chối" : "Đã từ chối cuộc gọi",
+        missed: isCaller,
+      };
+    case "busy":
+      return {
+        label: "Người nhận đang bận",
+        missed: true,
+      };
+  }
+}
+
+export function getMessagePreview(
+  message: MessagePublic,
+  viewerId?: string,
+): string {
   if (message.deletedAt) return "Tin nhắn đã bị xóa";
   if (message.encrypted) return "🔒 Tin mã hóa";
   switch (message.contentType) {
@@ -203,6 +271,20 @@ export function getMessagePreview(message: MessagePublic): string {
       return "📊 Bình chọn";
     case "file":
       return "📎 Tệp đính kèm";
+    case "call": {
+      const call = parseCallContent(message.content);
+      if (!call) return "📞 Cuộc gọi";
+      if (viewerId) {
+        return `📞 ${getCallLabel(call, viewerId).label}`;
+      }
+      if (call.outcome === "completed" && call.durationSec) {
+        return `📞 Cuộc gọi · ${formatCallDuration(call.durationSec)}`;
+      }
+      if (call.outcome === "missed") return "📞 Cuộc gọi nhỡ";
+      if (call.outcome === "rejected") return "📞 Cuộc gọi bị từ chối";
+      if (call.outcome === "busy") return "📞 Người nhận đang bận";
+      return "📞 Cuộc gọi";
+    }
     default:
       return message.content;
   }

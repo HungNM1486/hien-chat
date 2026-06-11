@@ -8,6 +8,7 @@ import { ThemeMascot } from "@/components/theme/theme-mascot";
 import { NewChatSheet } from "@/components/chat/new-chat-sheet";
 import { IconButton } from "@/components/ui/icon-button";
 import { fetchConversations } from "@/lib/chat-api";
+import { useAuthStore } from "@/stores/auth-store";
 import { useChatStore } from "@/stores/chat-store";
 import { useTheme } from "@/components/theme/theme-provider";
 import { getThemeIdentity } from "@hien-nha/theme";
@@ -30,6 +31,7 @@ export function ChatListPanel({
   const router = useRouter();
   const { activeTheme } = useTheme();
   const identity = getThemeIdentity(activeTheme.id);
+  const currentUserId = useAuthStore((s) => s.user?.id);
   const conversations = useChatStore((s) => s.conversations);
   const isLoading = useChatStore((s) => s.isLoadingConversations);
   const setConversations = useChatStore((s) => s.setConversations);
@@ -149,6 +151,7 @@ export function ChatListPanel({
               conversations={filtered}
               isLoading={isLoading && filtered.length === 0}
               activeId={activeId}
+              currentUserId={currentUserId}
             />
           )}
         </div>

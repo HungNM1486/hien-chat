@@ -11,7 +11,9 @@
 # Migrate DB (lần đầu hoặc sau upgrade):
 #   docker compose --env-file .env -f docker/docker-compose.prod.yml run --rm migrate
 #
-# NEXT_PUBLIC_API_URL được bake vào web lúc build — đổi domain phải rebuild web.
+# NEXT_PUBLIC_API_URL và NEXT_PUBLIC_TURN_* được bake vào web lúc build — đổi phải rebuild web.
+#
+# TURN (coturn): DNS A record turn.<domain> → IP VPS; mở firewall TCP/UDP 3478 và UDP 49160-49200.
 
 services:
   postgres:
@@ -112,12 +114,34 @@ services:
       retries: 3
       start_period: 30s
 
+  coturn:
+    build:
+      context: ./coturn
+      dockerfile: Dockerfile
+    image: hiennha-coturn:latest
+    container_name: hiennha-coturn
+    restart: unless-stopped
+    env_file: ../.env
+    environment:
+      TURN_REALM: ${TURN_REALM:?Set TURN_REALM in .env}
+      TURN_HOST: ${TURN_HOST:?Set TURN_HOST in .env}
+      TURN_USERNAME: ${TURN_USERNAME:?Set TURN_USERNAME in .env}
+      TURN_PASSWORD: ${TURN_PASSWORD:?Set TURN_PASSWORD in .env}
+      TURN_EXTERNAL_IP: ${TURN_EXTERNAL_IP:-}
+    ports:
+      - "3478:3478/tcp"
+      - "3478:3478/udp"
+      - "49160-49200:49160-49200/udp"
+
   web:
     build:
       context: ..
       dockerfile: docker/Dockerfile.web
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_TURN_URL: ${NEXT_PUBLIC_TURN_URL:-turn:${TURN_HOST:?Set TURN_HOST in .env}:3478}
+        NEXT_PUBLIC_TURN_USERNAME: ${TURN_USERNAME:-}
+        NEXT_PUBLIC_TURN_CREDENTIAL: ${TURN_PASSWORD:-}
     image: hiennha-web:latest
     container_name: hiennha-web
     restart: unless-stopped

@@ -1,0 +1,26 @@
+# Generated at container start — do not edit directly.
+
+listening-port=3478
+listening-ip=0.0.0.0
+relay-ip=0.0.0.0
+
+# Relay media ports (must match docker-compose UDP publish range)
+min-port=49160
+max-port=49200
+
+realm=@TURN_REALM@
+server-name=@TURN_HOST@
+
+fingerprint
+lt-cred-mech
+user=@TURN_USERNAME@:@TURN_PASSWORD@
+
+no-multicast-peers
+no-cli
+no-tlsv1
+no-tlsv1_1
+
+# Uncomment when TURN_EXTERNAL_IP is set (VPS behind NAT / cloud floating IP)
+# external-ip=@TURN_EXTERNAL_IP@
+
+verbose

@@ -22,6 +22,13 @@
       "when": 1781067600000,
       "tag": "0004_shared_secret_e2e",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1781200000000,
+      "tag": "0005_call_content_type",
+      "breakpoints": true
     }
   ]
 }

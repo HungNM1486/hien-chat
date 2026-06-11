@@ -33,6 +33,7 @@ export function notifyIncomingMessage({
   currentUserId,
   activeConversationId,
 }: NotifyMessageOptions): void {
+  if (message.contentType === "call") return;
   if (message.senderId === currentUserId) return;
   if (activeConversationId === message.conversationId) return;
 

@@ -6,10 +6,14 @@ export function getIceServers(): RTCIceServer[] {
     { urls: "stun:stun1.l.google.com:19302" },
   ];
 
-  const turnUrl = process.env.NEXT_PUBLIC_TURN_URL;
+  const turnUrl = process.env.NEXT_PUBLIC_TURN_URL?.trim();
   if (turnUrl) {
+    const urls = turnUrl
+      .split(",")
+      .map((u) => u.trim())
+      .filter(Boolean);
     servers.push({
-      urls: turnUrl,
+      urls: urls.length === 1 ? urls[0]! : urls,
       username: process.env.NEXT_PUBLIC_TURN_USERNAME,
       credential: process.env.NEXT_PUBLIC_TURN_CREDENTIAL,
     });
@@ -22,6 +26,9 @@ export class VoiceCallEngine {
   private pc: RTCPeerConnection | null = null;
   private localStream: MediaStream | null = null;
   private remoteStream: MediaStream | null = null;
+  private preparePromise: Promise<void> | null = null;
+  private remoteDescriptionSet = false;
+  private pendingIceCandidates: WebRtcIceCandidate[] = [];
   private onIceCandidate: ((candidate: WebRtcIceCandidate) => void) | null = null;
   private onRemoteStream: ((stream: MediaStream) => void) | null = null;
   private onConnectionState: ((state: RTCPeerConnectionState) => void) | null = null;
@@ -45,6 +52,18 @@ export class VoiceCallEngine {
   }
 
   async prepare(): Promise<void> {
+    if (this.pc) return;
+    if (this.preparePromise) return this.preparePromise;
+
+    this.preparePromise = this.doPrepare();
+    try {
+      await this.preparePromise;
+    } finally {
+      this.preparePromise = null;
+    }
+  }
+
+  private async doPrepare(): Promise<void> {
     if (this.pc) return;
 
     this.localStream = await navigator.mediaDevices.getUserMedia({
@@ -74,16 +93,32 @@ export class VoiceCallEngine {
     };
 
     this.pc.ontrack = (event) => {
-      const [stream] = event.streams;
-      if (stream) {
-        this.remoteStream = stream;
-        this.onRemoteStream?.(stream);
+      let stream = event.streams[0];
+      if (!stream) {
+        if (!this.remoteStream) {
+          this.remoteStream = new MediaStream();
+        }
+        stream = this.remoteStream;
+        if (!stream.getTracks().includes(event.track)) {
+          stream.addTrack(event.track);
+        }
       }
+      this.remoteStream = stream;
+      this.onRemoteStream?.(stream);
     };
 
     this.pc.onconnectionstatechange = () => {
       if (this.pc) this.onConnectionState?.(this.pc.connectionState);
     };
+  }
+
+  private async drainPendingIceCandidates(): Promise<void> {
+    if (!this.pc) return;
+    const pending = this.pendingIceCandidates;
+    this.pendingIceCandidates = [];
+    for (const candidate of pending) {
+      await this.addIceCandidate(candidate);
+    }
   }
 
   async createOffer(): Promise<WebRtcSdp> {
@@ -104,6 +139,8 @@ export class VoiceCallEngine {
     await this.pc!.setRemoteDescription(
       new RTCSessionDescription(sdp as RTCSessionDescriptionInit),
     );
+    this.remoteDescriptionSet = true;
+    await this.drainPendingIceCandidates();
     const answer = await this.pc!.createAnswer();
     await this.pc!.setLocalDescription(answer);
     return {
@@ -117,16 +154,22 @@ export class VoiceCallEngine {
     await this.pc.setRemoteDescription(
       new RTCSessionDescription(sdp as RTCSessionDescriptionInit),
     );
+    this.remoteDescriptionSet = true;
+    await this.drainPendingIceCandidates();
   }
 
   async addIceCandidate(candidate: WebRtcIceCandidate): Promise<void> {
     if (!this.pc || !candidate.candidate) return;
+    if (!this.remoteDescriptionSet) {
+      this.pendingIceCandidates.push(candidate);
+      return;
+    }
     try {
       await this.pc.addIceCandidate(
         new RTCIceCandidate(candidate as RTCIceCandidateInit),
       );
     } catch {
-      // ignore late candidates
+      // ignore late or duplicate candidates
     }
   }
 
@@ -139,6 +182,9 @@ export class VoiceCallEngine {
   destroy(): void {
     this.pc?.close();
     this.pc = null;
+    this.preparePromise = null;
+    this.remoteDescriptionSet = false;
+    this.pendingIceCandidates = [];
     for (const track of this.localStream?.getTracks() ?? []) {
       track.stop();
     }

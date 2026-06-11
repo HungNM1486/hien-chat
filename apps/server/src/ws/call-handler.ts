@@ -1,4 +1,4 @@
-import type { WsClientEvent } from "@hien-nha/shared";
+import type { CallOutcome, WsClientEvent } from "@hien-nha/shared";
 import { db } from "../db/index.js";
 import { conversations, users } from "../db/schema.js";
 import { eq } from "drizzle-orm";
@@ -6,16 +6,53 @@ import {
   getConversationMemberIds,
   isConversationMember,
 } from "../services/conversations.js";
+import { createCallLogMessage } from "../services/call-log.js";
 import { notifyIncomingCall } from "../services/push.js";
 import { wsHub } from "./hub.js";
 import {
+  type CallSession,
   endCall,
   endCallsForUser,
+  getCallDurationSec,
   getCallSession,
   isUserInCall,
   markCallActive,
   startRinging,
 } from "./call-state.js";
+
+function resolveCallLog(
+  session: CallSession | undefined,
+): { outcome: CallOutcome; durationSec: number | null } {
+  if (!session) {
+    return { outcome: "completed", durationSec: null };
+  }
+  if (session.state === "active") {
+    return {
+      outcome: "completed",
+      durationSec: getCallDurationSec(session),
+    };
+  }
+  return { outcome: "missed", durationSec: null };
+}
+
+async function logCallEnd(
+  conversationId: string,
+  callerId: string,
+  session: CallSession | undefined,
+  outcomeOverride?: CallOutcome,
+): Promise<void> {
+  const { outcome, durationSec } = resolveCallLog(session);
+  try {
+    await createCallLogMessage({
+      conversationId,
+      callerId,
+      outcome: outcomeOverride ?? outcome,
+      durationSec,
+    });
+  } catch (err) {
+    console.error("Failed to create call log message:", err);
+  }
+}
 
 async function getDirectPeerId(
   conversationId: string,
@@ -100,6 +137,7 @@ export async function handleCallEvent(
           type: "call:busy",
           conversationId: event.conversationId,
         });
+        void logCallEnd(event.conversationId, userId, undefined, "busy");
         return;
       }
 
@@ -109,6 +147,7 @@ export async function handleCallEvent(
           type: "call:busy",
           conversationId: event.conversationId,
         });
+        void logCallEnd(event.conversationId, userId, undefined, "busy");
         return;
       }
 
@@ -142,7 +181,14 @@ export async function handleCallEvent(
       if (!session) return;
       if (session.calleeId !== userId && session.callerId !== userId) return;
 
+      const sessionSnapshot = { ...session };
       endCall(event.conversationId);
+      void logCallEnd(
+        event.conversationId,
+        sessionSnapshot.callerId,
+        sessionSnapshot,
+        "rejected",
+      );
       const otherId = session.callerId === userId ? session.calleeId : session.callerId;
       wsHub.sendToUser(otherId, {
         type: "call:rejected",
@@ -155,7 +201,13 @@ export async function handleCallEvent(
     case "call:hangup": {
       const session = getCallSession(event.conversationId);
       if (session) {
+        const sessionSnapshot = { ...session };
         endCall(event.conversationId);
+        void logCallEnd(
+          event.conversationId,
+          sessionSnapshot.callerId,
+          sessionSnapshot,
+        );
         const otherId =
           session.callerId === userId ? session.calleeId : session.callerId;
         wsHub.sendToUser(otherId, {
@@ -187,14 +239,19 @@ export async function handleCallEvent(
 }
 
 export function cleanupCallsOnDisconnect(userId: string): void {
-  const endedIds = endCallsForUser(userId);
-  for (const conversationId of endedIds) {
-    void getConversationMemberIds(conversationId).then((memberIds) => {
+  const endedSessions = endCallsForUser(userId);
+  for (const session of endedSessions) {
+    void logCallEnd(
+      session.conversationId,
+      session.callerId,
+      session,
+    );
+    void getConversationMemberIds(session.conversationId).then((memberIds) => {
       for (const id of memberIds) {
         if (id !== userId) {
           wsHub.sendToUser(id, {
             type: "call:ended",
-            conversationId,
+            conversationId: session.conversationId,
             userId,
             reason: "disconnect",
           });

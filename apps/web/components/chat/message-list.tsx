@@ -8,6 +8,7 @@ import {
   LockKeyIcon,
 } from "@phosphor-icons/react";
 import { isEncryptedPayload } from "@hien-nha/crypto";
+import { CallBubble } from "@/components/chat/call-bubble";
 import { ImageBubble } from "@/components/chat/image-bubble";
 import { VoiceBubble } from "@/components/chat/voice-bubble";
 import { ReplyPreview } from "@/components/chat/reply-preview";
@@ -422,17 +423,22 @@ export function MessageList({
         const prev = index > 0 ? messages[index - 1] : null;
         const next = index < messages.length - 1 ? messages[index + 1] : null;
         const showDivider = !prev || dayLabel(prev.createdAt) !== day;
+        const isCallMessage = message.contentType === "call";
         const isOwn = message.senderId === currentUserId;
 
         const isGroupedWithPrev =
+          !isCallMessage &&
           prev &&
+          prev.contentType !== "call" &&
           prev.senderId === message.senderId &&
           dayLabel(prev.createdAt) === day &&
           !prev.deletedAt &&
           !message.deletedAt;
 
         const isGroupedWithNext =
+          !isCallMessage &&
           next &&
+          next.contentType !== "call" &&
           next.senderId === message.senderId &&
           dayLabel(next.createdAt) === day &&
           !next.deletedAt &&
@@ -447,19 +453,23 @@ export function MessageList({
                 </span>
               </div>
             )}
-            <MessageBubble
-              message={message}
-              isOwn={isOwn}
-              isRead={isMessageRead(message)}
-              showSenderName={showSenderNames}
-              showTail={!isGroupedWithNext}
-              isGrouped={!!isGroupedWithPrev}
-              currentUserId={currentUserId}
-              onOpenImage={onOpenImage}
-              onReply={onReply}
-              onReaction={onReaction}
-              onPin={onPin}
-            />
+            {isCallMessage ? (
+              <CallBubble message={message} currentUserId={currentUserId} />
+            ) : (
+              <MessageBubble
+                message={message}
+                isOwn={isOwn}
+                isRead={isMessageRead(message)}
+                showSenderName={showSenderNames}
+                showTail={!isGroupedWithNext}
+                isGrouped={!!isGroupedWithPrev}
+                currentUserId={currentUserId}
+                onOpenImage={onOpenImage}
+                onReply={onReply}
+                onReaction={onReaction}
+                onPin={onPin}
+              />
+            )}
           </div>
         );
       })}

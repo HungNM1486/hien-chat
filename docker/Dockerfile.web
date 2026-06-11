@@ -12,6 +12,9 @@ RUN pnpm install --frozen-lockfile --filter @hien-nha/web...
 
 FROM base AS builder
 ARG NEXT_PUBLIC_API_URL=https://example.com
+ARG NEXT_PUBLIC_TURN_URL=
+ARG NEXT_PUBLIC_TURN_USERNAME=
+ARG NEXT_PUBLIC_TURN_CREDENTIAL=
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY apps/web/package.json ./apps/web/
 COPY packages/shared/package.json ./packages/shared/
@@ -21,6 +24,9 @@ RUN pnpm install --frozen-lockfile --filter @hien-nha/web...
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_TURN_URL=$NEXT_PUBLIC_TURN_URL
+ENV NEXT_PUBLIC_TURN_USERNAME=$NEXT_PUBLIC_TURN_USERNAME
+ENV NEXT_PUBLIC_TURN_CREDENTIAL=$NEXT_PUBLIC_TURN_CREDENTIAL
 RUN pnpm --filter @hien-nha/shared build \
  && pnpm --filter @hien-nha/theme build \
  && pnpm --filter @hien-nha/crypto build \

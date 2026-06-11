@@ -202,7 +202,6 @@ export function useCallManager(send: WsSend) {
         if (useCallStore.getState().conversationId !== data.conversationId) return;
         try {
           await engine.handleAnswer(data.sdp);
-          useCallStore.getState().setActive();
         } catch {
           hangup("Không thể kết nối cuộc gọi");
         }

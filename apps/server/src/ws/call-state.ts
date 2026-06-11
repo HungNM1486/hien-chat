@@ -1,8 +1,9 @@
-type CallSession = {
+export type CallSession = {
   conversationId: string;
   callerId: string;
   calleeId: string;
   state: "ringing" | "active";
+  activeStartedAt: number | null;
 };
 
 const sessions = new Map<string, CallSession>();
@@ -36,23 +37,37 @@ export function startRinging(
     callerId,
     calleeId,
     state: "ringing",
+    activeStartedAt: null,
   });
 }
 
 export function markCallActive(conversationId: string): void {
   const session = sessions.get(sessionKey(conversationId));
-  if (session) session.state = "active";
+  if (session) {
+    session.state = "active";
+    if (session.activeStartedAt == null) {
+      session.activeStartedAt = Date.now();
+    }
+  }
+}
+
+export function getCallDurationSec(session: CallSession): number | null {
+  if (session.activeStartedAt == null) return null;
+  return Math.max(
+    0,
+    Math.floor((Date.now() - session.activeStartedAt) / 1000),
+  );
 }
 
 export function endCall(conversationId: string): void {
   sessions.delete(sessionKey(conversationId));
 }
 
-export function endCallsForUser(userId: string): string[] {
-  const ended: string[] = [];
+export function endCallsForUser(userId: string): CallSession[] {
+  const ended: CallSession[] = [];
   for (const [key, session] of sessions.entries()) {
     if (session.callerId === userId || session.calleeId === userId) {
-      ended.push(session.conversationId);
+      ended.push({ ...session });
       sessions.delete(key);
     }
   }

@@ -25,6 +25,7 @@ export const contentTypeEnum = pgEnum("content_type", [
   "voice",
   "file",
   "poll",
+  "call",
 ]);
 
 export const users = pgTable("users", {

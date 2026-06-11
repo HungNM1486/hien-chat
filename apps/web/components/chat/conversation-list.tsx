@@ -29,11 +29,16 @@ function formatTime(iso: string): string {
 interface ConversationItemProps {
   conversation: ConversationPublic;
   activeId?: string | null;
+  currentUserId?: string;
 }
 
-export function ConversationItem({ conversation, activeId }: ConversationItemProps) {
+export function ConversationItem({
+  conversation,
+  activeId,
+  currentUserId,
+}: ConversationItemProps) {
   const preview = conversation.lastMessage
-    ? getMessagePreview(conversation.lastMessage)
+    ? getMessagePreview(conversation.lastMessage, currentUserId)
     : "Bắt đầu cuộc trò chuyện";
   const time = conversation.lastMessage?.createdAt ?? conversation.createdAt;
   const hasUnread = conversation.unreadCount > 0;
@@ -108,12 +113,14 @@ interface ConversationListProps {
   conversations: ConversationPublic[];
   isLoading?: boolean;
   activeId?: string | null;
+  currentUserId?: string;
 }
 
 export function ConversationList({
   conversations,
   isLoading,
   activeId,
+  currentUserId,
 }: ConversationListProps) {
   if (isLoading) {
     return (
@@ -141,7 +148,12 @@ export function ConversationList({
   return (
     <div className="conversation-list-desktop flex flex-col">
       {conversations.map((c) => (
-        <ConversationItem key={c.id} conversation={c} activeId={activeId} />
+        <ConversationItem
+          key={c.id}
+          conversation={c}
+          activeId={activeId}
+          currentUserId={currentUserId}
+        />
       ))}
     </div>
   );

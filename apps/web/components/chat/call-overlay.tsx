@@ -44,13 +44,22 @@ export function CallOverlay({
   const remoteAudioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
+    const el = remoteAudioRef.current;
+    if (!el || !remoteAudioReady) return;
+
     const engine = getEngine();
     const stream = engine?.getRemoteStream();
-    const el = remoteAudioRef.current;
-    if (el && stream) {
-      el.srcObject = stream;
+    if (!stream) return;
+
+    el.srcObject = stream;
+    el.muted = false;
+    void el.play().catch(() => {});
+
+    const onAddTrack = () => {
       void el.play().catch(() => {});
-    }
+    };
+    stream.addEventListener("addtrack", onAddTrack);
+    return () => stream.removeEventListener("addtrack", onAddTrack);
   }, [getEngine, remoteAudioReady, status]);
 
   const [mounted, setMounted] = useState(false);
